@@ -213,6 +213,16 @@ function startHttpServer() {
           return;
         }
 
+        // Strict subnet isolation: Block HTTP requests originating from different subnets
+        const clientIp = req.socket.remoteAddress.replace(/^.*:/, '');
+        const activeIp = getLanIp();
+        if (clientIp !== '127.0.0.1' && clientIp !== 'localhost' && !isSameSubnet(clientIp, activeIp)) {
+          console.log(`[HTTP Server] Blocked request from ${clientIp} on inactive subnet (active: ${activeIp})`);
+          res.writeHead(403);
+          res.end('Forbidden: Subnet mismatch');
+          return;
+        }
+
         // POST /api/localsend/v2/register
         if (pathname === '/api/localsend/v2/register' && method === 'POST') {
           parseJsonBody(req).then((body) => {
@@ -568,6 +578,13 @@ function startUdpDiscovery() {
       if (msg.fingerprint === device.id) return; // ignore self
       
       const remoteIp = rinfo.address;
+
+      // Strict subnet isolation: Ignore UDP announcements coming from other subnets
+      const activeIp = getLanIp();
+      if (!isSameSubnet(remoteIp, activeIp)) {
+        return;
+      }
+
       upsertDevice({ ...msg, ip: remoteIp });
 
       // If the incoming packet is an active announcement request, respond back so they see us too
@@ -614,10 +631,19 @@ function respondToUdpAnnouncement(ip, port) {
       protocol: 'http',
       announcement: false
     }));
-    const client = dgram.createSocket('udp4');
-    client.send(payload, 0, payload.length, port, ip, () => {
-      client.close();
-    });
+
+    const activeIp = getLanIp();
+    const interfaces = getNetworkInterfaces();
+    const activeIface = interfaces.find(iface => iface.address === activeIp);
+
+    if (activeIface) {
+      const client = dgram.createSocket('udp4');
+      client.bind({ address: activeIface.address, exclusive: true }, () => {
+        client.send(payload, 0, payload.length, port, ip, () => {
+          client.close();
+        });
+      });
+    }
   } catch (e) {
     // Ignore send failures
   }
@@ -637,13 +663,16 @@ function sendUdpAnnouncement() {
     announcement: true
   }));
 
+  const activeIp = getLanIp();
   const interfaces = getNetworkInterfaces();
-  for (const iface of interfaces) {
+  const activeIface = interfaces.find(iface => iface.address === activeIp);
+
+  if (activeIface) {
     try {
-      udpSocket.setMulticastInterface(iface.address);
+      udpSocket.setMulticastInterface(activeIface.address);
       udpSocket.send(payload, 0, payload.length, UDP_PORT, MULTICAST_ADDR, (err) => {
         if (err) {
-          // Ignore individual interface send errors (e.g., if link is down)
+          // Ignore individual interface send errors
         }
       });
     } catch (e) {
