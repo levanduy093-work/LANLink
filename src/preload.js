@@ -32,5 +32,6 @@ contextBridge.exposeInMainWorld('lanlink', {
   onFileProgress: (callback) => subscribe('file:progress', callback),
   onSignal: (callback) => subscribe('webrtc:signal', callback),
   onCallEvent: (callback) => subscribe('call:event', callback),
-  onInvite: (callback) => subscribe('lan:invite', callback)
+  onInvite: (callback) => subscribe('lan:invite', callback),
+  onInterfaceChanged: (callback) => subscribe('app:interface-changed', callback)
 });

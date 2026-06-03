@@ -123,6 +123,11 @@ async function boot() {
     // 5. Initialize transmit bottom bar
     updateTransmitButtonState();
 
+    // 6. Polling timer to keep interfaces and active IP in sync (every 5 seconds)
+    setInterval(() => {
+      refreshInterfaces();
+    }, 5000);
+
     addLog('success', 'LANLink engine booted successfully. Ready to transmit.');
   } catch (err) {
     addLog('error', `Initialization failed: ${err.message}`);
@@ -139,8 +144,19 @@ function updateLocalDeviceCard() {
 // --- Network Interfaces Helper ---
 async function refreshInterfaces() {
   try {
-    state.me = await window.lanlink.getInfo(); // Sync active IP from backend
-    state.interfaces = await window.lanlink.getInterfaces();
+    const me = await window.lanlink.getInfo(); // Sync active IP from backend
+    const interfaces = await window.lanlink.getInterfaces();
+
+    // Check if anything has changed before updating DOM to prevent redraw flicker
+    const listChanged = JSON.stringify(interfaces) !== JSON.stringify(state.interfaces);
+    const ipChanged = !state.me || me.ip !== state.me.ip || me.name !== state.me.name;
+
+    if (!listChanged && !ipChanged) {
+      return; // No change, skip DOM updates
+    }
+
+    state.me = me;
+    state.interfaces = interfaces;
     updateLocalDeviceCard();
     els.interfaceCount.textContent = state.interfaces.length;
 
@@ -449,6 +465,12 @@ function registerIpcListeners() {
   window.lanlink.onSignal(async (payload) => {
     const { signal, senderId } = payload;
     handleSignaling(signal, senderId);
+  });
+
+  // Automatically refresh when backend notices network interface changes
+  window.lanlink.onInterfaceChanged(() => {
+    addLog('info', 'Hardware network interface change detected. Re-syncing active subnet...');
+    refreshInterfaces();
   });
 }
 

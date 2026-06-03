@@ -688,44 +688,50 @@ function checkPeerRegistration(ip) {
       resolve();
     };
 
-    const req = http.request({
-      hostname: ip,
-      port: 53317, // default LocalSend port
-      path: '/api/localsend/v2/register',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        if (res.statusCode === 200) {
-          try {
-            const info = JSON.parse(data);
-            upsertDevice({ ...info, ip });
-            log('success', `Discovered peer via scan: ${info.alias} at ${ip}`);
-          } catch (e) {
-            // Ignore JSON parsing errors
-          }
+    let connTimeout;
+    try {
+      const req = http.request({
+        hostname: ip,
+        port: 53317, // default LocalSend port
+        path: '/api/localsend/v2/register',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
         }
+      }, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            try {
+              const info = JSON.parse(data);
+              upsertDevice({ ...info, ip });
+              log('success', `Discovered peer via scan: ${info.alias} at ${ip}`);
+            } catch (e) {
+              // Ignore JSON parsing errors
+            }
+          }
+          done();
+        });
+      });
+
+      // Custom connection timeout: destroy request if it hangs in TCP/ARP handshake for more than 2000ms
+      // 2000ms is much safer to allow ARP resolution on physical networks
+      connTimeout = setTimeout(() => {
+        req.destroy();
+        done();
+      }, 2000);
+
+      req.on('error', () => {
         done();
       });
-    });
 
-    // Custom connection timeout: destroy request if it hangs in TCP/ARP handshake for more than 1000ms
-    const connTimeout = setTimeout(() => {
-      req.destroy();
+      req.write(payload);
+      req.end();
+    } catch (err) {
       done();
-    }, 1000);
-
-    req.on('error', () => {
-      done();
-    });
-
-    req.write(payload);
-    req.end();
+    }
   });
 }
 
@@ -810,8 +816,20 @@ function startLanRuntime() {
     startPingLoop();
   });
 
-  // Cleanup offline devices timer
+  // Cleanup offline devices timer and auto-detect network interface changes
   cleanupTimer = setInterval(() => {
+    // Check if active IP has changed due to interface connection/disconnection
+    const currentActiveIp = getLanIp();
+    if (device.ip !== currentActiveIp) {
+      log('info', `Network change: Active IP auto-switched from ${device.ip} to ${currentActiveIp}`);
+      console.log(`[Network Switch] Active IP changed from ${device.ip} to ${currentActiveIp}`);
+      device.ip = currentActiveIp;
+      upsertDevice(device);
+      sendUdpAnnouncement();
+      emitDevices();
+      sendToRenderer('app:interface-changed', { activeIp: currentActiveIp });
+    }
+
     let changed = false;
     for (const [id, d] of devices.entries()) {
       if (id === device.id) continue;
