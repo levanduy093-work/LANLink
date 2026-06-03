@@ -27,7 +27,8 @@
   "dependencies": {
     "chart.js": "^4.4.9",
     "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "sqlite3": "^5.1.7"
   },
   "build": {
     "appId": "com.lanlink.app",
