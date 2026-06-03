@@ -910,6 +910,25 @@ ipcMain.handle('lan:rescan', async () => {
   return { ok: true };
 });
 
+ipcMain.handle('lan:scan-custom-subnet', async (_event, prefix) => {
+  log('info', `Starting manual TCP subnet scan for prefix ${prefix}.x...`);
+  const scannedIps = [];
+  for (let i = 1; i <= 254; i++) {
+    scannedIps.push(`${prefix}.${i}`);
+  }
+
+  // Batch scan
+  const concurrencyLimit = 40;
+  for (let i = 0; i < scannedIps.length; i += concurrencyLimit) {
+    const batch = scannedIps.slice(i, i + concurrencyLimit);
+    const batchPromises = batch.map(ip => checkPeerRegistration(ip));
+    await Promise.all(batchPromises);
+  }
+
+  log('success', `Manual subnet scan for ${prefix}.x completed.`);
+  return { ok: true };
+});
+
 // Send file (REST based)
 ipcMain.handle('file:send', async (_event, payload) => {
   const { path: filePath, targets } = payload;

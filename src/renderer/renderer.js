@@ -32,6 +32,7 @@ const els = {
   peerConnectForm: document.getElementById('peerConnectForm'),
   peerIpInput: document.getElementById('peerIpInput'),
   peerConnectBtn: document.getElementById('peerConnectBtn'),
+  scanSubnetBtn: document.getElementById('scanSubnetBtn'),
   rescanBtn: document.getElementById('rescanBtn'),
   deviceList: document.getElementById('deviceList'),
   radarContainer: document.getElementById('radarContainer'),
@@ -276,6 +277,33 @@ function bindEvents() {
     }
   });
 
+  // Scan entire subnet manually
+  els.scanSubnetBtn.addEventListener('click', async () => {
+    const inputVal = els.peerIpInput.value.trim();
+    if (!inputVal) {
+      addLog('error', 'Please enter an IP or subnet prefix (e.g. 192.168.1.15) to scan.');
+      return;
+    }
+
+    const match = inputVal.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})/);
+    if (!match) {
+      addLog('error', 'Invalid IP or subnet prefix format. Use e.g. 192.168.1.15');
+      return;
+    }
+
+    const prefix = match[1];
+    els.scanSubnetBtn.disabled = true;
+    addLog('info', `Triggering manual sweep for subnet ${prefix}.x...`);
+
+    try {
+      await window.lanlink.scanCustomSubnet(prefix);
+    } catch (err) {
+      addLog('error', `Manual subnet sweep failed: ${err.message}`);
+    } finally {
+      els.scanSubnetBtn.disabled = false;
+    }
+  });
+
   // Rescan / Scan network button
   els.rescanBtn.addEventListener('click', async () => {
     els.rescanBtn.disabled = true;
@@ -427,7 +455,7 @@ function switchTab(tab) {
     els.tabTextBtn.classList.add('active');
     els.tabLogBtn.classList.remove('active');
     els.tabFilesContent.style.display = 'none';
-    els.tabTextContent.style.display = 'block';
+    els.tabTextContent.style.display = 'flex';
     els.tabLogContent.style.display = 'none';
     els.transmitBtn.style.display = 'none'; // Chat has its own submit composer button
     

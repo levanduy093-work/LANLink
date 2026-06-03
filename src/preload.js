@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('lanlink', {
   getInterfaces: () => ipcRenderer.invoke('app:get-interfaces'),
   setActiveIp: (ip) => ipcRenderer.invoke('app:set-active-ip', ip),
   rescan: () => ipcRenderer.invoke('lan:rescan'),
+  scanCustomSubnet: (prefix) => ipcRenderer.invoke('lan:scan-custom-subnet', prefix),
   acceptInvite: (sessionId) => ipcRenderer.invoke('lan:accept-invite', sessionId),
   declineInvite: (sessionId) => ipcRenderer.invoke('lan:decline-invite', sessionId),
   cancelTransfer: (sessionId) => ipcRenderer.invoke('lan:cancel-transfer', sessionId),
