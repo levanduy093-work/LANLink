@@ -1085,6 +1085,15 @@ async function acceptCall() {
   try {
     // 1. Get local stream
     state.localStream = await getMediaStream();
+
+    // Default: mic muted, camera on
+    const audioTrack = state.localStream.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = false; // mic muted by default
+    }
+    state.isMicEnabled = false;
+    state.isCamEnabled = true;
+
     if (state.localStream.getVideoTracks().length > 0) {
       els.localVideo.srcObject = state.localStream;
       els.localVideo.style.display = 'block';

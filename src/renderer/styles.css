@@ -610,7 +610,7 @@ p, .muted {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  flex: 3;
+  flex: 4;
   min-height: 0;
 }
 
@@ -899,7 +899,7 @@ p, .muted {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 7;
+  flex: 6;
   min-height: 0;
 }
 
