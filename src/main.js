@@ -150,6 +150,14 @@ function emitDevices() {
 
 function upsertDevice(remote) {
   if (remote.id === device.id || remote.fingerprint === device.id) return;
+
+  const activeIp = getLanIp();
+  if (remote.ip && !isSameSubnet(remote.ip, activeIp)) {
+    // Ignore updates from other subnets to prevent overwriting active subnet IPs
+    // of multi-homed devices (e.g. Wi-Fi broadcasts overwriting LAN IPs)
+    return;
+  }
+
   const id = remote.id || remote.fingerprint;
   const current = devices.get(id) || {};
   devices.set(id, {
@@ -786,11 +794,11 @@ function startPingLoop() {
         });
       });
       
-      // Custom connection timeout: destroy request if it hangs in TCP/ARP handshake for more than 800ms
+      // Custom connection timeout: destroy request if it hangs in TCP/ARP handshake for more than 2000ms
       const connTimeout = setTimeout(() => {
         req.destroy();
         handleFailure('TIMEOUT');
-      }, 800);
+      }, 2000);
 
       req.on('error', (err) => {
         handleFailure(err.code || 'error');
