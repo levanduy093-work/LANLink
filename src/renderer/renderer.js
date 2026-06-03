@@ -460,6 +460,13 @@ function updateTransmitButtonState() {
     els.textMessageInput.value = '';
   }
 
+  // Update target badge details
+  if (peerSelected) {
+    const peer = state.devices.find(d => d.id === state.selectedPeerId);
+    if (peer) {
+      els.selectedTargetBadge.textContent = peer.alias;
+      els.selectedTargetBadge.classList.remove('empty');
+    }
   } else {
     els.selectedTargetBadge.textContent = 'No device selected';
     els.selectedTargetBadge.classList.add('empty');
