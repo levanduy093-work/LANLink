@@ -738,11 +738,11 @@ function startPingLoop() {
         });
       });
       
-      // Custom connection timeout: destroy request if it hangs in TCP/ARP handshake for more than 1500ms
+      // Custom connection timeout: destroy request if it hangs in TCP/ARP handshake for more than 800ms
       const connTimeout = setTimeout(() => {
         req.destroy();
         handleFailure('TIMEOUT');
-      }, 1500);
+      }, 800);
 
       req.on('error', (err) => {
         handleFailure(err.code || 'error');
@@ -750,7 +750,7 @@ function startPingLoop() {
       
       req.end();
     });
-  }, 4000);
+  }, 2000);
 }
 
 function startLanRuntime() {
