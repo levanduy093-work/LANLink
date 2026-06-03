@@ -142,7 +142,7 @@ function updateLocalDeviceCard() {
 }
 
 // --- Network Interfaces Helper ---
-async function refreshInterfaces() {
+async function refreshInterfaces(force = false) {
   try {
     const me = await window.lanlink.getInfo(); // Sync active IP from backend
     const interfaces = await window.lanlink.getInterfaces();
@@ -151,7 +151,7 @@ async function refreshInterfaces() {
     const listChanged = JSON.stringify(interfaces) !== JSON.stringify(state.interfaces);
     const ipChanged = !state.me || me.ip !== state.me.ip || me.name !== state.me.name;
 
-    if (!listChanged && !ipChanged) {
+    if (!force && !listChanged && !ipChanged) {
       return; // No change, skip DOM updates
     }
 
@@ -189,7 +189,7 @@ async function refreshInterfaces() {
           const newIp = await window.lanlink.setActiveIp(ip);
           state.me.ip = newIp;
           addLog('info', `Active IP interface switched to: ${newIp}`);
-          refreshInterfaces();
+          refreshInterfaces(true);
           
           // Automatically trigger network discovery sweep on the new active interface
           addLog('info', `Initiating device sweep on interface ${newIp}...`);

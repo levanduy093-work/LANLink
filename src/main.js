@@ -126,9 +126,14 @@ function log(type, message, meta = {}) {
 
 function emitDevices() {
   const activeIp = getLanIp();
+  log('info', `[emitDevices] activeIp: ${activeIp}, total devices in map: ${devices.size}`);
   const list = Array.from(devices.values())
     .filter(d => d.id !== device.id)
-    .filter(d => isSameSubnet(d.ip, activeIp))
+    .filter(d => {
+      const match = isSameSubnet(d.ip, activeIp);
+      log('info', `[emitDevices] checking peer: ${d.alias} (${d.ip}), isSameSubnet: ${match}`);
+      return match;
+    })
     .map(d => {
       let status = d.status;
       if (status === 'online' && Date.now() - d.lastSeen >= 12000) {
@@ -139,6 +144,7 @@ function emitDevices() {
         status
       };
     });
+  log('info', `[emitDevices] sending list size: ${list.length} to renderer.`);
   sendToRenderer('lan:devices', list);
 }
 
@@ -1464,7 +1470,7 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   shutdownRuntime();
-  if (process.platform !== 'darwin') app.quit();
+  app.quit();
 });
 
 app.on('activate', () => {
