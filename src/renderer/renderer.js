@@ -423,8 +423,10 @@ function registerIpcListeners() {
     const existing = state.activeTransfers.get(progress.transferId) || { speedHistory: [] };
     const updated = { ...existing, ...progress };
 
+    const isActiveStatus = (status) => status === 'sending' || status === 'receiving';
+
     // Record speed history during active transfers
-    if ((progress.status === 'sending' || progress.status === 'receiving') && progress.speedMbps !== undefined) {
+    if (isActiveStatus(progress.status) && progress.speedMbps !== undefined) {
       updated.speedHistory = existing.speedHistory || [];
       updated.speedHistory.push({
         time: Date.now(),
@@ -433,6 +435,25 @@ function registerIpcListeners() {
       if (updated.speedHistory.length > 40) {
         updated.speedHistory.shift();
       }
+    }
+
+    // Calculate active duration
+    if (isActiveStatus(progress.status)) {
+      if (existing.lastActiveTime && isActiveStatus(existing.status)) {
+        const delta = Date.now() - existing.lastActiveTime;
+        updated.durationMs = (existing.durationMs || 0) + delta;
+      } else {
+        updated.durationMs = existing.durationMs || 0;
+      }
+      updated.lastActiveTime = Date.now();
+    } else {
+      if (progress.status === 'completed' || progress.status === 'failed' || progress.status === 'canceled') {
+        if (existing.lastActiveTime && isActiveStatus(existing.status)) {
+          const delta = Date.now() - existing.lastActiveTime;
+          updated.durationMs = (existing.durationMs || 0) + delta;
+        }
+      }
+      updated.lastActiveTime = null;
     }
 
     state.activeTransfers.set(progress.transferId, updated);
@@ -868,6 +889,17 @@ function escapeHtml(unsafe) {
     .replace(/'/g, '&#039;');
 }
 
+function formatDuration(ms) {
+  if (!ms || ms < 0) return '0s';
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+}
+
 // --- Speed Chart Modal & Actions ---
 
 window.openSpeedChartModal = function(transferId) {
@@ -950,8 +982,10 @@ function updateActiveChart(item) {
 
   const subtitleEl = document.getElementById('chartModalSubtitle');
   if (subtitleEl) {
-    const statusText = item.status === 'sending' ? 'Sending' : (item.status === 'receiving' ? 'Receiving' : (item.status === 'paused' ? 'Paused' : item.status));
-    subtitleEl.innerHTML = `${statusText} • ${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)} • ${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}`;
+    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    const statusText = capitalize(item.status === 'sending' ? 'sending' : (item.status === 'receiving' ? 'receiving' : (item.status === 'paused' ? 'paused' : item.status)));
+    const durationText = item.durationMs !== undefined ? ` • ${formatDuration(item.durationMs)}` : '';
+    subtitleEl.innerHTML = `${statusText} • ${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)} • ${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${durationText}`;
   }
 
   updateModalButtons(item);
