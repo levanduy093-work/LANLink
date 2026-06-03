@@ -47,14 +47,12 @@
         {
           "target": "dmg",
           "arch": [
-            "x64",
             "arm64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "x64",
             "arm64"
           ]
         }
@@ -65,15 +63,13 @@
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "arm64"
+            "x64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "x64",
-            "arm64"
+            "x64"
           ]
         }
       ]
