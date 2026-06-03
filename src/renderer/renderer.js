@@ -10,7 +10,16 @@ const state = {
   currentInvite: null, // holds details of currently visible incoming invite
   chatHistory: [], // array of messages: { id, sender: { id, alias }, receiverId, text, time }
   activeChartSessionId: null,
-  speedChartInstance: null
+  speedChartInstance: null,
+
+  // WebRTC Call State
+  callState: 'idle', // 'idle', 'calling', 'ringing', 'connected'
+  callPeerId: null, // peer ID of the other side of the call
+  localStream: null,
+  peerConnection: null,
+  isMicEnabled: true,
+  isCamEnabled: true,
+  incomingCallPayload: null
 };
 
 // --- DOM Cache ---
@@ -64,7 +73,27 @@ const els = {
   modalPauseBtn: document.getElementById('modalPauseBtn'),
   modalCancelBtn: document.getElementById('modalCancelBtn'),
   modalDeleteBtn: document.getElementById('modalDeleteBtn'),
-  modalCloseBtn: document.getElementById('modalCloseBtn')
+  modalCloseBtn: document.getElementById('modalCloseBtn'),
+
+  // Video Call DOMs
+  startCallBtn: document.getElementById('startCallBtn'),
+  hangUpBtn: document.getElementById('hangUpBtn'),
+  toggleMicBtn: document.getElementById('toggleMicBtn'),
+  toggleCamBtn: document.getElementById('toggleCamBtn'),
+  micIcon: document.getElementById('micIcon'),
+  camIcon: document.getElementById('camIcon'),
+  remoteVideo: document.getElementById('remoteVideo'),
+  localVideo: document.getElementById('localVideo'),
+  videoPlaceholder: document.getElementById('videoPlaceholder'),
+  callPlaceholderText: document.getElementById('callPlaceholderText'),
+  callStatusBadge: document.getElementById('callStatusBadge'),
+  callActiveActions: document.getElementById('callActiveActions'),
+  
+  // Incoming Call Modal DOMs
+  incomingCallModal: document.getElementById('incomingCallModal'),
+  incomingCallSenderName: document.getElementById('incomingCallSenderName'),
+  declineCallBtn: document.getElementById('declineCallBtn'),
+  acceptCallBtn: document.getElementById('acceptCallBtn')
 };
 
 // --- Boot & Initialization ---
@@ -261,6 +290,16 @@ function bindEvents() {
   els.clearLogBtn.addEventListener('click', () => {
     els.eventLog.innerHTML = '';
   });
+
+  // WebRTC Call Button clicks
+  els.startCallBtn.addEventListener('click', startCall);
+  els.hangUpBtn.addEventListener('click', hangUpCall);
+  els.toggleMicBtn.addEventListener('click', toggleMicrophone);
+  els.toggleCamBtn.addEventListener('click', toggleCamera);
+  
+  // Call Modal buttons
+  els.acceptCallBtn.addEventListener('click', acceptCall);
+  els.declineCallBtn.addEventListener('click', declineCall);
 }
 
 // --- IPC Event Listeners from Main Process ---
@@ -333,6 +372,18 @@ function registerIpcListeners() {
     if (!isSent) {
       addLog('success', `Message from ${msg.sender.alias}: "${msg.text}"`);
     }
+  });
+
+  // WebRTC Call Events
+  window.lanlink.onCallEvent(async (payload) => {
+    const { event, sender, extra } = payload;
+    handleCallEvent(event, sender, extra);
+  });
+
+  // WebRTC Signaling
+  window.lanlink.onSignal(async (payload) => {
+    const { signal, senderId } = payload;
+    handleSignaling(signal, senderId);
   });
 }
 
@@ -409,16 +460,35 @@ function updateTransmitButtonState() {
     els.textMessageInput.value = '';
   }
 
-  // Update target badge details
-  if (peerSelected) {
-    const peer = state.devices.find(d => d.id === state.selectedPeerId);
-    if (peer) {
-      els.selectedTargetBadge.textContent = peer.alias;
-      els.selectedTargetBadge.classList.remove('empty');
-    }
   } else {
     els.selectedTargetBadge.textContent = 'No device selected';
     els.selectedTargetBadge.classList.add('empty');
+  }
+
+  // Update Call button state
+  if (peerSelected && state.callState === 'idle') {
+    const peer = state.devices.find(d => d.id === state.selectedPeerId);
+    if (peer && peer.status === 'online') {
+      els.startCallBtn.disabled = false;
+      els.startCallBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>Call ${escapeHtml(peer.alias)}</span>
+      `;
+    } else {
+      els.startCallBtn.disabled = true;
+      els.startCallBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>Call Peer</span>
+      `;
+    }
+  } else {
+    els.startCallBtn.disabled = true;
+    if (state.callState === 'idle') {
+      els.startCallBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>Call Peer</span>
+      `;
+    }
   }
 }
 
@@ -849,3 +919,316 @@ window.deleteTransfer = function(event, transferId) {
   state.activeTransfers.delete(transferId);
   renderTransmissions();
 };
+
+// --- WebRTC Video Call Implementation ---
+
+async function startCall() {
+  if (!state.selectedPeerId || state.callState !== 'idle') return;
+  
+  const targetId = state.selectedPeerId;
+  const peer = state.devices.find(d => d.id === targetId);
+  if (!peer) {
+    addLog('error', 'Selected peer is no longer online.');
+    return;
+  }
+
+  addLog('info', `Calling ${peer.alias}...`);
+  state.callState = 'calling';
+  state.callPeerId = targetId;
+  updateCallUI();
+
+  try {
+    // 1. Get local stream
+    state.localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
+    els.localVideo.srcObject = state.localStream;
+    els.localVideo.style.display = 'block';
+    
+    // 2. Setup RTCPeerConnection
+    setupPeerConnection(targetId);
+
+    // 3. Create and Send Offer
+    const offer = await state.peerConnection.createOffer();
+    await state.peerConnection.setLocalDescription(offer);
+
+    await window.lanlink.sendCallEvent({
+      event: 'invite',
+      targetId,
+      extra: { offer }
+    });
+
+  } catch (err) {
+    addLog('error', `Failed to start call: ${err.message}`);
+    resetCallState();
+  }
+}
+
+function setupPeerConnection(targetId) {
+  const rtcConfig = {
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  };
+
+  state.peerConnection = new RTCPeerConnection(rtcConfig);
+
+  // Add tracks
+  state.localStream.getTracks().forEach(track => {
+    state.peerConnection.addTrack(track, state.localStream);
+  });
+
+  // ICE Candidate handler
+  state.peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      window.lanlink.sendSignal({
+        signal: { type: 'candidate', candidate: event.candidate },
+        targetId
+      }).catch(err => {
+        console.error("Failed to send ICE candidate:", err);
+      });
+    }
+  };
+
+  // Remote track received handler
+  state.peerConnection.ontrack = (event) => {
+    addLog('success', 'Remote media stream received.');
+    els.remoteVideo.srcObject = event.streams[0];
+    els.remoteVideo.style.display = 'block';
+    els.videoPlaceholder.style.display = 'none';
+  };
+
+  state.peerConnection.oniceconnectionstatechange = () => {
+    console.log("ICE Connection State changed:", state.peerConnection.iceConnectionState);
+    if (state.peerConnection.iceConnectionState === 'disconnected' || 
+        state.peerConnection.iceConnectionState === 'failed') {
+      addLog('warning', 'ICE connection dropped.');
+      hangUpCall();
+    }
+  };
+}
+
+async function acceptCall() {
+  if (!state.incomingCallPayload) return;
+  els.incomingCallModal.classList.remove('open');
+
+  const { sender, offer } = state.incomingCallPayload;
+  addLog('success', `Call accepted from ${sender.alias}`);
+  
+  state.callState = 'connected';
+  state.callPeerId = sender.id;
+  updateCallUI();
+
+  try {
+    // 1. Get local stream
+    state.localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
+    els.localVideo.srcObject = state.localStream;
+    els.localVideo.style.display = 'block';
+
+    // 2. Setup RTCPeerConnection
+    setupPeerConnection(sender.id);
+
+    // 3. Set remote description
+    await state.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+    // 4. Create and send answer
+    const answer = await state.peerConnection.createAnswer();
+    await state.peerConnection.setLocalDescription(answer);
+
+    await window.lanlink.sendCallEvent({
+      event: 'accept',
+      targetId: sender.id,
+      extra: { answer }
+    });
+
+  } catch (err) {
+    addLog('error', `Failed to accept call: ${err.message}`);
+    // Notify peer of failure
+    window.lanlink.sendCallEvent({ event: 'decline', targetId: sender.id }).catch(() => {});
+    resetCallState();
+  }
+}
+
+async function declineCall() {
+  if (!state.incomingCallPayload) return;
+  els.incomingCallModal.classList.remove('open');
+  
+  const { sender } = state.incomingCallPayload;
+  addLog('info', `Call from ${sender.alias} declined.`);
+  
+  try {
+    await window.lanlink.sendCallEvent({
+      event: 'decline',
+      targetId: sender.id
+    });
+  } catch (err) {
+    console.error("Failed to send decline event:", err);
+  }
+
+  resetCallState();
+}
+
+async function hangUpCall() {
+  if (state.callState === 'idle') return;
+  addLog('info', 'Ending video call...');
+
+  if (state.callPeerId) {
+    try {
+      await window.lanlink.sendCallEvent({
+        event: 'hangup',
+        targetId: state.callPeerId
+      });
+    } catch (err) {
+      console.error("Failed to send hangup event:", err);
+    }
+  }
+
+  resetCallState();
+}
+
+function resetCallState() {
+  state.callState = 'idle';
+  state.callPeerId = null;
+  state.incomingCallPayload = null;
+  state.isMicEnabled = true;
+  state.isCamEnabled = true;
+
+  // Stop media tracks
+  if (state.localStream) {
+    state.localStream.getTracks().forEach(track => track.stop());
+    state.localStream = null;
+  }
+
+  // Close peer connection
+  if (state.peerConnection) {
+    state.peerConnection.close();
+    state.peerConnection = null;
+  }
+
+  // Reset UI elements
+  els.localVideo.style.display = 'none';
+  els.localVideo.srcObject = null;
+  els.remoteVideo.style.display = 'none';
+  els.remoteVideo.srcObject = null;
+  els.videoPlaceholder.style.display = 'flex';
+  
+  updateCallUI();
+}
+
+function updateCallUI() {
+  els.callStatusBadge.textContent = state.callState.toUpperCase();
+  
+  // Style status badge
+  els.callStatusBadge.className = 'badge';
+  if (state.callState === 'connected') {
+    els.callStatusBadge.style.color = 'var(--status-green)';
+    els.callStatusBadge.style.borderColor = 'rgba(53, 208, 127, 0.2)';
+    els.callStatusBadge.style.background = 'var(--status-green-faint)';
+    
+    els.startCallBtn.style.display = 'none';
+    els.callActiveActions.style.display = 'flex';
+  } else if (state.callState === 'calling' || state.callState === 'ringing') {
+    els.callStatusBadge.style.color = 'var(--status-amber)';
+    els.callStatusBadge.style.borderColor = 'rgba(247, 185, 85, 0.2)';
+    els.callStatusBadge.style.background = 'var(--status-amber-faint)';
+    
+    els.startCallBtn.style.display = 'none';
+    els.callActiveActions.style.display = 'flex';
+    
+    if (state.callState === 'calling') {
+      els.callPlaceholderText.textContent = "Ringing peer...";
+    }
+  } else {
+    // idle
+    els.callStatusBadge.style.color = 'var(--text-faint)';
+    els.callStatusBadge.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+    els.callStatusBadge.style.background = 'rgba(255, 255, 255, 0.02)';
+    
+    els.startCallBtn.style.display = 'inline-flex';
+    els.callActiveActions.style.display = 'none';
+    
+    els.callPlaceholderText.textContent = "Ready to start LAN call";
+  }
+
+  // Reset mic/cam icons
+  els.micIcon.style.color = state.isMicEnabled ? 'inherit' : 'var(--status-red)';
+  els.camIcon.style.color = state.isCamEnabled ? 'inherit' : 'var(--status-red)';
+
+  updateTransmitButtonState();
+}
+
+function toggleMicrophone() {
+  if (!state.localStream) return;
+  const audioTrack = state.localStream.getAudioTracks()[0];
+  if (audioTrack) {
+    state.isMicEnabled = !state.isMicEnabled;
+    audioTrack.enabled = state.isMicEnabled;
+    els.micIcon.style.color = state.isMicEnabled ? 'inherit' : 'var(--status-red)';
+    addLog('info', state.isMicEnabled ? 'Microphone enabled' : 'Microphone muted');
+  }
+}
+
+function toggleCamera() {
+  if (!state.localStream) return;
+  const videoTrack = state.localStream.getVideoTracks()[0];
+  if (videoTrack) {
+    state.isCamEnabled = !state.isCamEnabled;
+    videoTrack.enabled = state.isCamEnabled;
+    els.camIcon.style.color = state.isCamEnabled ? 'inherit' : 'var(--status-red)';
+    els.localVideo.style.display = state.isCamEnabled ? 'block' : 'none';
+    addLog('info', state.isCamEnabled ? 'Camera enabled' : 'Camera disabled');
+  }
+}
+
+async function handleCallEvent(event, sender, extra) {
+  if (event === 'invite') {
+    if (state.callState !== 'idle') {
+      // Busy
+      window.lanlink.sendCallEvent({ event: 'decline', targetId: sender.id }).catch(() => {});
+      return;
+    }
+    state.callState = 'ringing';
+    state.incomingCallPayload = { sender, offer: extra.offer };
+    els.incomingCallSenderName.textContent = sender.alias;
+    els.incomingCallModal.classList.add('open');
+    addLog('warning', `Incoming video call invite from ${sender.alias}`);
+    updateCallUI();
+  } 
+  else if (event === 'accept') {
+    if (state.callState === 'calling' && state.peerConnection) {
+      addLog('success', `${sender.alias} accepted the call.`);
+      state.callState = 'connected';
+      updateCallUI();
+      try {
+        await state.peerConnection.setRemoteDescription(new RTCSessionDescription(extra.answer));
+      } catch (err) {
+        addLog('error', `Failed to set remote description: ${err.message}`);
+        hangUpCall();
+      }
+    }
+  } 
+  else if (event === 'decline') {
+    if (state.callState === 'calling' || state.callState === 'ringing') {
+      addLog('warning', `Call declined by ${sender.alias}`);
+      resetCallState();
+    }
+  } 
+  else if (event === 'hangup') {
+    addLog('info', `${sender.alias} ended the call.`);
+    resetCallState();
+  }
+}
+
+async function handleSignaling(signal, senderId) {
+  if (senderId !== state.callPeerId) return;
+
+  if (signal.type === 'candidate' && state.peerConnection) {
+    try {
+      await state.peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+    } catch (err) {
+      console.error("Failed to add remote ICE candidate:", err);
+    }
+  }
+}
