@@ -1010,6 +1010,7 @@ ipcMain.handle('chat:send', async (_event, payload) => {
         'Content-Length': textBytes.length
       }
     }, (res) => {
+      res.on('data', () => {}); // Consumes the stream data so 'end' fires!
       res.on('end', () => {
         if (res.statusCode === 200) {
           // Render locally in chat history
