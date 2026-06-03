@@ -139,6 +139,7 @@ function updateLocalDeviceCard() {
 // --- Network Interfaces Helper ---
 async function refreshInterfaces() {
   try {
+    state.me = await window.lanlink.getInfo(); // Sync active IP from backend
     state.interfaces = await window.lanlink.getInterfaces();
     updateLocalDeviceCard();
     els.interfaceCount.textContent = state.interfaces.length;
