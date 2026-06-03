@@ -142,9 +142,12 @@ async function refreshInterfaces() {
 
     els.localIpList.innerHTML = state.interfaces.map(iface => `
       <div class="local-ip-item ${iface.address === state.me.ip ? 'active' : ''}" data-ip="${escapeHtml(iface.address)}">
-        <div class="ip-meta">
-          <strong>${escapeHtml(iface.address)}</strong>
-          <span>${escapeHtml(iface.name)}</span>
+        <div class="ip-info-group">
+          <div class="ip-radio-btn"></div>
+          <div class="ip-meta">
+            <strong>${escapeHtml(iface.address)}</strong>
+            <span>${escapeHtml(iface.name)}</span>
+          </div>
         </div>
         <span class="ip-badge ${escapeHtml(iface.type.toLowerCase())}">${escapeHtml(iface.type)}</span>
       </div>
@@ -154,11 +157,19 @@ async function refreshInterfaces() {
     els.localIpList.querySelectorAll('.local-ip-item').forEach(el => {
       el.addEventListener('click', async () => {
         const ip = el.dataset.ip;
+        if (ip === state.me.ip) return; // Already active
+
         try {
           const newIp = await window.lanlink.setActiveIp(ip);
           state.me.ip = newIp;
           addLog('info', `Active IP interface switched to: ${newIp}`);
           refreshInterfaces();
+          
+          // Automatically trigger network discovery sweep on the new active interface
+          addLog('info', `Initiating device sweep on interface ${newIp}...`);
+          window.lanlink.rescan().catch(err => {
+            addLog('error', `Sweep on switch failed: ${err.message}`);
+          });
         } catch (e) {
           addLog('error', `Failed to switch active IP: ${e.message}`);
         }

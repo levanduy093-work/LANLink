@@ -240,6 +240,21 @@ p, .muted {
   letter-spacing: 0.05em;
 }
 
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-subtitle {
+  font-size: 9px;
+  text-transform: none;
+  font-weight: 500;
+  color: var(--text-faint);
+  opacity: 0.75;
+  letter-spacing: 0;
+}
+
 .badge {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -270,9 +285,51 @@ p, .muted {
   transition: all 0.2s ease;
 }
 
-.local-ip-item:hover, .local-ip-item.active {
-  background: rgba(34, 211, 238, 0.05);
-  border-color: rgba(34, 211, 238, 0.25);
+.local-ip-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.local-ip-item.active {
+  background: rgba(34, 211, 238, 0.06);
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.05);
+}
+
+.ip-info-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ip-radio-btn {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.local-ip-item:hover .ip-radio-btn {
+  border-color: rgba(34, 211, 238, 0.6);
+}
+
+.local-ip-item.active .ip-radio-btn {
+  border-color: var(--accent-cyan);
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+}
+
+.local-ip-item.active .ip-radio-btn::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bg-color);
 }
 
 .ip-meta {
