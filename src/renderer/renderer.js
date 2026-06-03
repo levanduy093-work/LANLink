@@ -1005,7 +1005,7 @@ function setupPeerConnection(targetId) {
     if (event.candidate) {
       addLog('info', `Gathered local ICE candidate: ${event.candidate.candidate.slice(0, 30)}...`);
       window.lanlink.sendSignal({
-        signal: { type: 'candidate', candidate: event.candidate },
+        signal: { type: 'candidate', candidate: event.candidate.toJSON() },
         targetId
       }).then(() => {
         addLog('info', 'Sent ICE candidate to peer.');
