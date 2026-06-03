@@ -108,8 +108,7 @@ async function boot() {
   try {
     // 1. Get local device info
     state.me = await window.lanlink.getInfo();
-    els.localDeviceAlias.textContent = state.me.name;
-    els.localDeviceDetails.textContent = `${state.me.deviceModel} • Port ${state.me.port}`;
+    updateLocalDeviceCard();
 
     // 2. Fetch and render subnets/interfaces
     await refreshInterfaces();
@@ -129,10 +128,18 @@ async function boot() {
   }
 }
 
+function updateLocalDeviceCard() {
+  if (state.me) {
+    els.localDeviceAlias.textContent = state.me.name;
+    els.localDeviceDetails.textContent = `${state.me.deviceModel || 'Desktop'} • IP: ${state.me.ip || '127.0.0.1'} • Port ${state.me.port}`;
+  }
+}
+
 // --- Network Interfaces Helper ---
 async function refreshInterfaces() {
   try {
     state.interfaces = await window.lanlink.getInterfaces();
+    updateLocalDeviceCard();
     els.interfaceCount.textContent = state.interfaces.length;
 
     if (state.interfaces.length === 0) {
@@ -157,6 +164,7 @@ async function refreshInterfaces() {
     els.localIpList.querySelectorAll('.local-ip-item').forEach(el => {
       el.addEventListener('click', async () => {
         const ip = el.dataset.ip;
+        addLog('info', `Clicked IP interface: ${ip}`);
         if (ip === state.me.ip) return; // Already active
 
         try {

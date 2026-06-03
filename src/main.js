@@ -80,6 +80,7 @@ function getNetworkInterfaces() {
 
 function getLanIp() {
   const list = getNetworkInterfaces();
+  console.log('[getLanIp] list:', list.map(i => i.address), 'userSelectedIp:', userSelectedIp);
   if (userSelectedIp && list.some(iface => iface.address === userSelectedIp)) {
     return userSelectedIp;
   }
@@ -835,12 +836,14 @@ ipcMain.handle('app:get-info', () => ({
   name: device.alias,
   ip: getLanIp(),
   role: 'Peer',
-  port: device.port
+  port: device.port,
+  deviceModel: device.deviceModel
 }));
 
 ipcMain.handle('app:get-interfaces', () => getNetworkInterfaces());
 
 ipcMain.handle('app:set-active-ip', (_event, ip) => {
+  console.log('[setActiveIp] Received request to set active IP to:', ip);
   userSelectedIp = ip;
   device.ip = getLanIp();
   upsertDevice(device);

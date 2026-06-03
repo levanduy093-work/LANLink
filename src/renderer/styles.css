@@ -285,6 +285,10 @@ p, .muted {
   transition: all 0.2s ease;
 }
 
+.local-ip-item > * {
+  pointer-events: none;
+}
+
 .local-ip-item:hover {
   background: rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.08);
