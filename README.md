@@ -4,40 +4,154 @@ LANLink is a cross-platform Electron desktop app for communication between compu
 
 ## UI/UX Design Plan
 
-LANLink is designed as a modern dark desktop dashboard for a school project demonstration. The interface keeps operational status visible at all times and separates the app into stable work zones:
+LANLink is designed before implementation as a modern dark desktop dashboard for a school project demonstration. The interface keeps operational status visible at all times, avoids a default HTML look, and uses clear panel separation for LAN discovery, messaging, file transfer, charts, calls, and logs.
 
-- Left sidebar: LAN device discovery and target selection.
-- Top status bar: current role, LAN IP, connection state, online devices, and average RTT.
+### 1. UI/UX Analysis
+
+- Primary users: students demonstrating LAN communication on multiple computers.
+- Main goal: quickly prove that devices discover each other automatically, then send messages, files, and start a 1-to-1 voice/video call.
+- UX priorities: visible connection state, simple target selection, per-device transfer feedback, readable realtime logs, and stable 1366x768 / 1920x1080 layouts.
+
+### 2. Overall App Layout
+
+- Left sidebar: LAN device list and target selection.
+- Top status bar: role, local IP, connection status, online device count, average RTT.
 - Center workspace: text chat and file transfer.
 - Right rail: transfer speed chart and voice/video call panel.
 - Bottom panel: timestamped realtime event log.
 
-### Design System
+### 3. Wireframe Description
+
+```text
++-------------+--------------------------------------------------+
+| Device list | Role | IP | Connection | Online | Average Ping  |
+|             +-------------------------+------------------------+
+| selectable  | Text chat               | Speed chart            |
+| devices     |                         +------------------------+
+|             | File transfer           | Voice/video call       |
+|             +--------------------------------------------------+
+|             | Realtime event log                                |
++-------------+--------------------------------------------------+
+```
+
+### 4. Design System
 
 - Background: deep charcoal `#081018`.
-- Panels: graphite `#101923` and `#13202c`.
+- Panels: graphite `#101923`, `#13202c`, `#182737`.
 - Borders: blue-gray `#1d2b38` / `#263747`.
 - Primary accent: cyan `#22d3ee`.
 - Secondary accent: violet `#8b5cf6`.
 - Success/online: green `#35d07f`.
 - Warning: amber `#f7b955`.
 - Error/offline: red `#ff6577`.
-- Typography: Inter-like system sans stack.
-- Spacing: 4px base scale, 10-16px panel padding, 10-14px component gaps.
 - Radius: 9px for controls, 12-14px for cards and panels.
+- Motion: 140-160ms hover, focus, progress, and selection transitions.
 
-### Component Behavior
+### 5. Component List
 
-- Buttons: clear primary, secondary, danger, disabled, hover, focus, and active states.
-- Online devices: green dot, full opacity, selectable card.
-- Offline devices: red dot, muted card, not selectable.
-- Device rows: name, IP address, role chip, RTT, connected duration, unique ID.
-- Chat bubbles: right aligned for sent messages, left aligned for received messages, with sender, receiver, and timestamp metadata.
-- File transfer rows: file name, receiver, status chip, progress bar, percentage, and Mbps.
-- Progress bars: cyan-to-green fill with smooth width updates.
-- Logs: monospace timestamp rows with info/success/warning/error color labels.
-- Call panel: remote video tile, local preview overlay, start/end/mic/camera controls.
-- Chart panel: Chart.js line chart with time on X-axis and Mbps on Y-axis.
+- App shell, sidebar, top status bar, panel header, device card, role chip, status dot, button, icon button, chat bubble, file picker, transfer item, progress bar, chart panel, video tile, call controls, log row.
+
+### 6. Color Palette
+
+- Background: `#081018`.
+- Surface: `#101923`.
+- Raised surface: `#13202c`.
+- Input/card surface: `#182737`.
+- Text: `#eef7ff`.
+- Muted text: `#8ea2b4`.
+- Accent: `#22d3ee`.
+- Violet role accent: `#8b5cf6`.
+- Green online/success: `#35d07f`.
+- Amber warning: `#f7b955`.
+- Red offline/error: `#ff6577`.
+
+### 7. Typography
+
+- Font stack: Inter-like system sans stack.
+- App title: 21px, 800-900 weight.
+- Panel title: 15px, 800 weight.
+- Body/control text: 13-14px, 700-800 weight for controls.
+- Labels: 11-12px uppercase, high weight, muted color.
+- Logs: 12px monospace.
+
+### 8. Spacing Rules
+
+- Base spacing scale: 4px.
+- App gutter: 10-14px.
+- Panel padding: 14-16px.
+- Component gaps: 10-14px.
+- Device/transfer row padding: 9-12px.
+
+### 9. Button States
+
+- Primary: cyan gradient, dark text, subtle cyan shadow.
+- Secondary: dark raised surface with border.
+- Danger: red tinted surface and border.
+- Hover: slight upward movement and stronger border contrast.
+- Focus: cyan outline.
+- Disabled: reduced opacity and no transform.
+
+### 10. Online/Offline Status Styles
+
+- Online: green dot with soft green halo, full opacity, selectable.
+- Offline: red dot with soft red halo, muted opacity, not selectable.
+- Scanning/warning: amber status text.
+- Connected/success: green status text.
+
+### 11. Card Components
+
+- Cards use dark raised surfaces, 12px radius, subtle border, no nested-card visual clutter.
+- Selected cards use cyan border and a soft cyan inset glow.
+- Offline cards stay visible but are visually muted.
+
+### 12. Device List Item Design
+
+- Top row: green/red status dot, device name, host/client role chip.
+- Middle rows: LAN IP and unique device ID.
+- Bottom row: RTT and connected duration.
+- Click selects or deselects online remote devices.
+
+### 13. Chat Bubble Design
+
+- Sent messages align right with cyan-tinted background.
+- Received messages align left with neutral dark background.
+- Metadata shows sender, receiver target list, and timestamp.
+- Message content is escaped before rendering.
+
+### 14. File Transfer Item Design
+
+- Header: file name and status chip.
+- Body: progress track with cyan-to-green fill.
+- Footer: receiver name, percentage, current Mbps, and average Mbps.
+
+### 15. Progress Bar Design
+
+- Track: dark blue-gray.
+- Fill: cyan-to-green gradient.
+- Updates smoothly without changing row height.
+- Each receiver gets its own progress row.
+
+### 16. Realtime Log Panel Design
+
+- Scrollable bottom panel with newest item first.
+- Monospace timestamp.
+- Type label uses semantic color: info, success, warning, error.
+- Keeps the latest 160 log rows.
+
+### 17. Video/Voice Call Panel Design
+
+- Remote stream is the main tile.
+- Local preview sits as an overlay in the lower-right corner.
+- Controls include Start, End, microphone toggle, and webcam toggle.
+- Call status dot switches between idle/offline and active/online.
+
+### 18. Chart Panel Design
+
+- Chart.js line chart integrated into the right rail.
+- X-axis: time.
+- Y-axis: Mbps.
+- Cyan line, translucent fill, dark grid lines, no bulky legend.
+- Updates every second from active transfer telemetry.
 
 ## Architecture
 

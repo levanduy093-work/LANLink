@@ -147,6 +147,7 @@ function bindEvents() {
       size: state.selectedFile.size,
       progress: 0,
       speedMbps: 0,
+      avgSpeedMbps: 0,
       status: 'starting'
     });
     for (const targetId of targets) {
@@ -157,6 +158,7 @@ function bindEvents() {
         size: state.selectedFile.size,
         progress: 0,
         speedMbps: 0,
+        avgSpeedMbps: 0,
         status: 'pending'
       });
     }
@@ -346,7 +348,7 @@ function renderTransfers() {
         <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
         <div class="transfer-meta">
           <span>${escapeHtml(receiver)} · ${progress.toFixed(0)}%</span>
-          <span>${(transfer.speedMbps || 0).toFixed(2)} Mbps</span>
+          <span>${(transfer.speedMbps || 0).toFixed(2)} Mbps · Avg ${(transfer.avgSpeedMbps || transfer.speedMbps || 0).toFixed(2)} Mbps</span>
         </div>
       </article>
     `;

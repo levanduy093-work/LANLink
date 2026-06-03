@@ -128,7 +128,7 @@ async function createWindow() {
     height: 900,
     minWidth: 1180,
     minHeight: 720,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#081018',
     title: 'LANLink',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -178,7 +178,13 @@ function setupUdpDiscovery() {
         connectToHost(hostInfo);
       }
       if (role === 'Host' && message.deviceId < device.id) {
-        log('warning', `Another host was detected: ${message.name}`);
+        log('warning', `Another host was detected: ${message.name}. Switching to client mode.`);
+        stepDownToRemoteHost({
+          ip: rinfo.address,
+          port: message.port,
+          id: message.deviceId,
+          name: message.name
+        });
       }
     } catch (error) {
       log('error', 'Invalid discovery packet received', { error: error.message });
@@ -187,6 +193,31 @@ function setupUdpDiscovery() {
 
   udpSocket.on('error', (error) => log('error', 'UDP discovery error', { error: error.message }));
   udpSocket.bind(DISCOVERY_PORT, () => udpSocket.setBroadcast(true));
+}
+
+function stopHostServices() {
+  clearInterval(broadcastTimer);
+  clearInterval(pingTimer);
+  clearInterval(offlineTimer);
+  socketClient?.close();
+  socketClient = null;
+  ioServer?.close();
+  ioServer = null;
+  httpServer?.close();
+  httpServer = null;
+}
+
+function stepDownToRemoteHost(remoteHost) {
+  stopHostServices();
+  hostInfo = remoteHost;
+  role = 'Client';
+  device.role = 'Client';
+  device.rtt = 0;
+  devices.clear();
+  devices.set(device.id, device);
+  emitDevices();
+  sendToRenderer('lan:status', { role, localIp: device.ip, connected: false, host: remoteHost });
+  connectToHost(remoteHost);
 }
 
 function becomeHost() {
@@ -408,6 +439,7 @@ function handleIncomingFileStart(payload) {
     size: payload.size,
     progress: 0,
     speedMbps: 0,
+    avgSpeedMbps: 0,
     status: 'receiving'
   };
   sendToRenderer('file:progress', progressInfo);
@@ -429,6 +461,7 @@ function handleIncomingFileChunk(payload) {
   const now = Date.now();
   const elapsed = Math.max(1, now - transfer.startedAt) / 1000;
   const speedMbps = (transfer.received * 8) / elapsed / 1000000;
+  const avgSpeedMbps = speedMbps;
   const progress = Math.min(100, (transfer.received / transfer.size) * 100);
   
   const isFinished = transfer.received >= transfer.size;
@@ -445,6 +478,7 @@ function handleIncomingFileChunk(payload) {
       size: transfer.size,
       progress,
       speedMbps,
+      avgSpeedMbps,
       status: 'receiving'
     };
     sendToRenderer('file:progress', progressInfo);
@@ -467,6 +501,7 @@ function handleIncomingFileEnd(payload) {
     size: transfer.size,
     progress: 100,
     speedMbps: 0,
+    avgSpeedMbps: 0,
     status: 'completed',
     filePath: transfer.filePath
   };
@@ -543,19 +578,21 @@ ipcMain.handle('file:send', async (_event, payload) => {
       lastReportedAt = now;
       const elapsed = Math.max(1, now - startedAt) / 1000;
       const speedMbps = (sent * 8) / elapsed / 1000000;
+      const avgSpeedMbps = speedMbps;
       sendToRenderer('file:progress', {
         ...info,
         receiverId: 'sender-upload',
         received: sent,
         progress: (sent / stat.size) * 100,
         speedMbps,
+        avgSpeedMbps,
         status: isFinished ? 'completed' : 'sending'
       });
     }
   }
 
   socketClient.emit('file:end', info);
-  sendToRenderer('file:progress', { ...info, receiverId: 'sender-upload', received: stat.size, progress: 100, speedMbps: 0, status: 'completed' });
+  sendToRenderer('file:progress', { ...info, receiverId: 'sender-upload', received: stat.size, progress: 100, speedMbps: 0, avgSpeedMbps: 0, status: 'completed' });
 });
 
 ipcMain.handle('webrtc:signal', (_event, payload) => {
