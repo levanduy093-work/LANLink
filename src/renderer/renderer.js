@@ -975,7 +975,7 @@ async function startCall() {
 
 function setupPeerConnection(targetId) {
   const rtcConfig = {
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    iceServers: [] // Disabled STUN since direct local network connections do not require it
   };
 
   state.peerConnection = new RTCPeerConnection(rtcConfig);
@@ -1011,12 +1011,23 @@ function setupPeerConnection(targetId) {
   };
 
   state.peerConnection.oniceconnectionstatechange = () => {
-    console.log("ICE Connection State changed:", state.peerConnection.iceConnectionState);
-    if (state.peerConnection.iceConnectionState === 'disconnected' || 
-        state.peerConnection.iceConnectionState === 'failed') {
-      addLog('warning', 'ICE connection dropped.');
+    const iceState = state.peerConnection.iceConnectionState;
+    addLog('info', `ICE Connection State: ${iceState}`);
+    if (iceState === 'disconnected' || iceState === 'failed') {
       hangUpCall();
     }
+  };
+
+  state.peerConnection.onconnectionstatechange = () => {
+    const connState = state.peerConnection.connectionState;
+    addLog('info', `Peer Connection State: ${connState}`);
+    if (connState === 'failed') {
+      hangUpCall();
+    }
+  };
+
+  state.peerConnection.onicegatheringstatechange = () => {
+    addLog('info', `ICE Gathering State: ${state.peerConnection.iceGatheringState}`);
   };
 }
 

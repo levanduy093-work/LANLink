@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
