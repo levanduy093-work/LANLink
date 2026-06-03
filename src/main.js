@@ -692,6 +692,7 @@ function startPingLoop() {
         res.on('data', () => {}); // Consume stream so 'end' fires
         res.on('end', () => {
           if (res.statusCode === 200) {
+            peer.pingFailures = 0; // reset failure counter
             const rtt = Date.now() - startTime;
             const currentRtt = peer.rtt || 0;
             const smoothed = currentRtt ? (currentRtt * 0.7) + (rtt * 0.3) : rtt;
@@ -703,12 +704,24 @@ function startPingLoop() {
         });
       });
       
-      req.on('error', () => {
-        // Ignore individual ping errors; cleanupTimer handles offline states
+      req.on('error', (err) => {
+        const isDefinitive = err.code === 'ECONNREFUSED' || err.code === 'EHOSTUNREACH';
+        peer.pingFailures = (peer.pingFailures || 0) + 1;
+        if ((isDefinitive || peer.pingFailures >= 2) && peer.status === 'online') {
+          peer.status = 'offline';
+          log('warning', `Device went offline: ${peer.alias} (${err.code || 'error'})`);
+          emitDevices();
+        }
       });
       
       req.on('timeout', () => {
         req.destroy();
+        peer.pingFailures = (peer.pingFailures || 0) + 1;
+        if (peer.pingFailures >= 2 && peer.status === 'online') {
+          peer.status = 'offline';
+          log('warning', `Device went offline: ${peer.alias} (timeout)`);
+          emitDevices();
+        }
       });
       
       req.end();
