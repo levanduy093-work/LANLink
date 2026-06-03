@@ -69,6 +69,32 @@
         </form>
       </div>
 
+      <!-- Discovered Devices Sidebar Section -->
+      <div class="sidebar-section discovered-section">
+        <div class="section-header">
+          <span>Nearby Devices</span>
+          <button id="rescanBtn" class="btn btn-secondary btn-icon-scan" type="button" title="Scan Network">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
+            <span>Scan</span>
+          </button>
+        </div>
+        
+        <div class="sidebar-discovery-area">
+          <!-- Radar Scan Animation (compact) -->
+          <div class="radar-container compact" id="radarContainer">
+            <div class="radar-circle ring-1"></div>
+            <div class="radar-circle ring-2"></div>
+            <div class="radar-scanner"></div>
+            <p class="radar-status" id="radarStatusText">Broadcasting...</p>
+          </div>
+
+          <!-- Peer List (1 column scrollable) -->
+          <div id="deviceList" class="peer-list-vertical">
+            <!-- Discovered cards will render here -->
+          </div>
+        </div>
+      </div>
+
       <!-- Footer Branding -->
       <div class="sidebar-footer">
         <span class="footer-text">LocalSend Protocol v2 Compatible</span>
@@ -78,48 +104,14 @@
     <!-- CENTER CONSOLE: Discovery Grid & File Selector -->
     <main class="main-content">
       
-      <!-- Top Actions Bar -->
-      <header class="console-header panel">
-        <div class="header-title">
-          <h2>Nearby Discovered Devices</h2>
-          <p class="muted">Select a device below to transmit files or messages</p>
-        </div>
-        <div class="header-actions">
-          <button id="rescanBtn" class="btn btn-secondary btn-glow" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
-            <span>Scan Network</span>
-          </button>
-        </div>
-      </header>
 
-      <!-- Discovery Hub (Radar + Cards) -->
-      <section class="discovery-hub panel">
-        
-        <!-- Radar Scan Animation when no devices, or shown at top -->
-        <div class="radar-container" id="radarContainer">
-          <div class="radar-circle ring-1"></div>
-          <div class="radar-circle ring-2"></div>
-          <div class="radar-circle ring-3"></div>
-          <div class="radar-scanner"></div>
-          <div class="radar-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11.034C18 7.15 14.866 4 11 4S4 7.15 4 11.034C4 13.9 5.62 16.378 8 17.5V20a1 1 0 001 1h4a1 1 0 001-1v-2.5c2.38-1.122 4-3.6 4-6.466z"/><path d="M9 10h4"/><path d="M10 14h2"/></svg>
-          </div>
-          <p class="radar-status" id="radarStatusText">Broadcasting announcements...</p>
-        </div>
-
-        <!-- Discovered Peers Dynamic Grid -->
-        <div class="peer-grid-container">
-          <div id="deviceList" class="peer-grid">
-            <!-- Discovered cards will render here -->
-          </div>
-        </div>
-      </section>
 
       <!-- Composer & Transmitter Section -->
       <section class="transmitter-hub panel">
         <div class="transmitter-tabs">
           <button class="tab-btn active" id="tabFilesBtn" type="button">Send Files</button>
           <button class="tab-btn" id="tabTextBtn" type="button">Send Text</button>
+          <button class="tab-btn" id="tabLogBtn" type="button">Console Log</button>
         </div>
 
         <div class="tab-content" id="tabFilesContent">
@@ -157,6 +149,16 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </form>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tabLogContent" style="display: none;">
+          <div class="tab-log-header">
+            <h3>Local Console Output</h3>
+            <button id="clearLogBtn" class="btn-link" type="button">Clear Logs</button>
+          </div>
+          <div id="eventLog" class="event-log-container">
+            <!-- Timed logs will render here -->
           </div>
         </div>
 
@@ -225,17 +227,6 @@
               </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- Event Logs Console -->
-      <section class="logs-section panel">
-        <div class="section-header">
-          <h2>Console Log</h2>
-          <button id="clearLogBtn" class="btn-link" type="button">Clear</button>
-        </div>
-        <div id="eventLog" class="event-log-container">
-          <!-- Timed logs will render here -->
         </div>
       </section>
     </aside>

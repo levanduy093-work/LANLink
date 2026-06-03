@@ -38,8 +38,10 @@ const els = {
   radarStatusText: document.getElementById('radarStatusText'),
   tabFilesBtn: document.getElementById('tabFilesBtn'),
   tabTextBtn: document.getElementById('tabTextBtn'),
+  tabLogBtn: document.getElementById('tabLogBtn'),
   tabFilesContent: document.getElementById('tabFilesContent'),
   tabTextContent: document.getElementById('tabTextContent'),
+  tabLogContent: document.getElementById('tabLogContent'),
   fileDropzone: document.getElementById('fileDropzone'),
   pickFileBtn: document.getElementById('pickFileBtn'),
   selectedFileCard: document.getElementById('selectedFileCard'),
@@ -173,6 +175,7 @@ function bindEvents() {
   // Tab Switching
   els.tabFilesBtn.addEventListener('click', () => switchTab('files'));
   els.tabTextBtn.addEventListener('click', () => switchTab('text'));
+  els.tabLogBtn.addEventListener('click', () => switchTab('log'));
 
   // File Picking
   els.pickFileBtn.addEventListener('click', pickFile);
@@ -395,17 +398,29 @@ function switchTab(tab) {
   if (tab === 'files') {
     els.tabFilesBtn.classList.add('active');
     els.tabTextBtn.classList.remove('active');
+    els.tabLogBtn.classList.remove('active');
     els.tabFilesContent.style.display = 'flex';
     els.tabTextContent.style.display = 'none';
+    els.tabLogContent.style.display = 'none';
     els.transmitBtn.style.display = 'inline-flex';
-  } else {
+  } else if (tab === 'text') {
     els.tabFilesBtn.classList.remove('active');
     els.tabTextBtn.classList.add('active');
+    els.tabLogBtn.classList.remove('active');
     els.tabFilesContent.style.display = 'none';
     els.tabTextContent.style.display = 'block';
+    els.tabLogContent.style.display = 'none';
     els.transmitBtn.style.display = 'none'; // Chat has its own submit composer button
     
     renderChatMessages();
+  } else if (tab === 'log') {
+    els.tabFilesBtn.classList.remove('active');
+    els.tabTextBtn.classList.remove('active');
+    els.tabLogBtn.classList.add('active');
+    els.tabFilesContent.style.display = 'none';
+    els.tabTextContent.style.display = 'none';
+    els.tabLogContent.style.display = 'flex';
+    els.transmitBtn.style.display = 'none';
   }
   updateTransmitButtonState();
 }
@@ -579,15 +594,14 @@ function renderPeersGrid() {
     return;
   }
 
-  // Hide the big radar scanner if we have discovered peers (so layout fits cards)
+  // Hide radar when we have peers — list takes over
   els.radarContainer.style.display = 'none';
 
   els.deviceList.innerHTML = onlinePeers.map(peer => {
     const isSelected = state.selectedPeerId === peer.id;
-    // Map device types to SVGs
-    let avatarSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`; // default desktop
+    let avatarSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
     if (peer.deviceType === 'mobile') {
-      avatarSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`;
+      avatarSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`;
     }
 
     const rttValue = (peer.rtt !== undefined && peer.rtt > 0) ? `${peer.rtt}ms` : '—';
@@ -595,17 +609,14 @@ function renderPeersGrid() {
 
     return `
       <div class="peer-card ${isSelected ? 'selected' : ''}" onclick="selectPeer('${peer.id}')">
-        <span class="peer-status-badge">
-          <span class="badge-dot"></span>Online
-        </span>
-        <div class="peer-avatar">
-          ${avatarSvg}
+        <div class="peer-avatar">${avatarSvg}</div>
+        <div class="peer-card-info">
+          <h4 class="peer-alias" title="${escapeHtml(peer.alias)}">${escapeHtml(peer.alias)}</h4>
+          <span class="peer-ip">${escapeHtml(peer.ip)}</span>
         </div>
-        <h4 class="peer-alias" title="${escapeHtml(peer.alias)}">${escapeHtml(peer.alias)}</h4>
-        <span class="peer-ip">${escapeHtml(peer.ip)}:${peer.port}</span>
         <div class="peer-card-footer">
-          <span class="peer-type-tag">${escapeHtml(peer.deviceModel || peer.deviceType)}</span>
           <span class="peer-ping ${rttClass}">${rttValue}</span>
+          <span class="peer-type-tag">${escapeHtml(peer.deviceType)}</span>
         </div>
       </div>
     `;
