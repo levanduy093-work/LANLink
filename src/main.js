@@ -482,6 +482,28 @@ function startHttpServer() {
           }
           res.writeHead(200);
           res.end('OK');
+        }
+        // POST /api/webrtc/call-event
+        else if (pathname === '/api/webrtc/call-event' && method === 'POST') {
+          parseJsonBody(req).then((body) => {
+            sendToRenderer('call:event', body);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true }));
+          }).catch(err => {
+            res.writeHead(400);
+            res.end('Bad Request');
+          });
+        }
+        // POST /api/webrtc/signal
+        else if (pathname === '/api/webrtc/signal' && method === 'POST') {
+          parseJsonBody(req).then((body) => {
+            sendToRenderer('webrtc:signal', body);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true }));
+          }).catch(err => {
+            res.writeHead(400);
+            res.end('Bad Request');
+          });
         } else {
           res.writeHead(404);
           res.end('Not Found');
@@ -1258,9 +1280,90 @@ ipcMain.handle('lan:toggle-pause-transfer', async (_event, sessionId) => {
   return { ok: true, isPaused: transfer.isPaused };
 });
 
-// Stub WebRTC calls (since LocalSend is file-sharing only, we bypass signaling)
-ipcMain.handle('webrtc:signal', () => ({ ok: true }));
-ipcMain.handle('call:event', () => ({ ok: true }));
+// Real WebRTC signaling and call event IPC Handlers
+ipcMain.handle('webrtc:signal', async (_event, payload) => {
+  const { signal, targetId } = payload;
+  const peer = devices.get(targetId);
+  if (!peer) throw new Error('Target peer not found');
+
+  const postData = JSON.stringify({
+    signal,
+    senderId: device.id
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = http.request({
+      hostname: peer.ip,
+      port: peer.port,
+      path: '/api/webrtc/signal',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      },
+      timeout: 5000
+    }, (res) => {
+      res.on('data', () => {});
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          resolve({ ok: true });
+        } else {
+          reject(new Error(`Failed to send signal: ${res.statusCode}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+});
+
+ipcMain.handle('call:event', async (_event, payload) => {
+  const { event: callEvent, targetId, extra } = payload;
+  const peer = devices.get(targetId);
+  if (!peer) throw new Error('Target peer not found');
+
+  const postData = JSON.stringify({
+    event: callEvent,
+    sender: {
+      id: device.id,
+      alias: device.alias,
+      ip: device.ip,
+      port: device.port,
+      deviceModel: device.deviceModel,
+      deviceType: device.deviceType
+    },
+    extra
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = http.request({
+      hostname: peer.ip,
+      port: peer.port,
+      path: '/api/webrtc/call-event',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      },
+      timeout: 5000
+    }, (res) => {
+      res.on('data', () => {});
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          resolve({ ok: true });
+        } else {
+          reject(new Error(`Failed to send call event: ${res.statusCode}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+});
 ipcMain.handle('lan:connect-peer', async (_event, ip) => {
   // Let the user add a peer manually by IP
   const peerIp = String(ip || '').trim();
