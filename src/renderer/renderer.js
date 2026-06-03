@@ -123,7 +123,27 @@ async function boot() {
     // 5. Initialize transmit bottom bar
     updateTransmitButtonState();
 
-    // 6. Polling timer to keep interfaces and active IP in sync (every 5 seconds)
+    // 6. Load chat and transfer history from SQLite
+    try {
+      const dbChat = await window.lanlink.getChatHistory();
+      if (dbChat) state.chatHistory = dbChat;
+    } catch (dbErr) {
+      console.error('Failed to load chat history from DB:', dbErr);
+    }
+
+    try {
+      const dbTransfers = await window.lanlink.getTransmissions();
+      if (dbTransfers) {
+        for (const t of dbTransfers) {
+          state.activeTransfers.set(t.transferId, t);
+        }
+        renderTransmissions();
+      }
+    } catch (dbErr) {
+      console.error('Failed to load transfers from DB:', dbErr);
+    }
+
+    // 7. Polling timer to keep interfaces and active IP in sync (every 5 seconds)
     setInterval(() => {
       refreshInterfaces();
     }, 5000);
@@ -457,6 +477,25 @@ function registerIpcListeners() {
     }
 
     state.activeTransfers.set(progress.transferId, updated);
+
+    // Save to SQLite on initial progress or status transitions
+    const isNew = !existing.status;
+    const hasStatusChanged = existing.status !== progress.status;
+    if (isNew || hasStatusChanged) {
+      window.lanlink.saveTransmission({
+        transferId: updated.transferId,
+        name: updated.name,
+        size: updated.size,
+        transferred: updated.transferred,
+        progress: updated.progress,
+        status: updated.status,
+        durationMs: updated.durationMs || 0,
+        receiverId: updated.receiverId || '',
+        senderId: updated.senderId || '',
+        timestamp: updated.timestamp || Date.now()
+      }).catch(err => console.error('Failed to save transmission to DB:', err));
+    }
+
     renderTransmissions();
 
     // Real-time speed chart update if this session's modal is active
@@ -469,6 +508,11 @@ function registerIpcListeners() {
   window.lanlink.onMessage((msg) => {
     state.chatHistory.push(msg);
     renderChatMessages();
+
+    // Save to SQLite
+    window.lanlink.saveChatMessage(msg).catch(err => {
+      console.error('Failed to save message to DB:', err);
+    });
     
     const isSent = msg.sender.id === state.me.id;
     if (!isSent) {
@@ -1062,6 +1106,11 @@ window.deleteTransfer = function(event, transferId) {
   if (event) event.stopPropagation();
   state.activeTransfers.delete(transferId);
   renderTransmissions();
+
+  // Delete from SQLite
+  window.lanlink.deleteTransferFromDb(transferId).catch(err => {
+    console.error('Failed to delete transmission from DB:', err);
+  });
 };
 
 // --- WebRTC Video Call Implementation ---

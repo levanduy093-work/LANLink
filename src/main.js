@@ -29,6 +29,159 @@ const pendingOutgoingSessions = new Map(); // sessionId -> session object
 let activeIncomingSession = null; // Currently active receive session
 const activeTransfers = new Map(); // sessionId -> { type: 'send'|'receive', req, stream, peer, isPaused: false }
 
+// --- SQLite Database Persistence ---
+let db;
+
+function initDatabase() {
+  const sqlite3 = require('sqlite3').verbose();
+  const dbPath = path.join(app.getPath('userData'), 'lanlink.db');
+  console.log('[SQLite] Initializing database at:', dbPath);
+  db = new sqlite3.Database(dbPath);
+
+  db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      messageId TEXT UNIQUE,
+      senderId TEXT,
+      senderAlias TEXT,
+      receiverId TEXT,
+      text TEXT,
+      time INTEGER
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS transmissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      transferId TEXT UNIQUE,
+      name TEXT,
+      size INTEGER,
+      transferred INTEGER,
+      progress REAL,
+      status TEXT,
+      durationMs INTEGER,
+      receiverId TEXT,
+      senderId TEXT,
+      timestamp INTEGER
+    )`);
+  });
+}
+
+function saveChatMessage(msg) {
+  return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database not initialized'));
+    db.run(
+      `INSERT OR IGNORE INTO chat_messages (messageId, senderId, senderAlias, receiverId, text, time)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [msg.id, msg.sender.id, msg.sender.alias, msg.receiverId, msg.text, msg.time],
+      function (err) {
+        if (err) {
+          console.error('[SQLite] Error saving chat message:', err.message);
+          reject(err);
+        } else {
+          resolve(this.lastID);
+        }
+      }
+    );
+  });
+}
+
+function saveTransmission(trans) {
+  return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database not initialized'));
+    db.run(
+      `INSERT INTO transmissions (transferId, name, size, transferred, progress, status, durationMs, receiverId, senderId, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(transferId) DO UPDATE SET
+         transferred = excluded.transferred,
+         progress = excluded.progress,
+         status = excluded.status,
+         durationMs = excluded.durationMs`,
+      [
+        trans.transferId,
+        trans.name,
+        trans.size,
+        trans.transferred,
+        trans.progress,
+        trans.status,
+        trans.durationMs || 0,
+        trans.receiverId || '',
+        trans.senderId || '',
+        trans.timestamp || Date.now()
+      ],
+      function (err) {
+        if (err) {
+          console.error('[SQLite] Error saving transmission:', err.message);
+          reject(err);
+        } else {
+          resolve();
+        }
+      }
+    );
+  });
+}
+
+function deleteTransmissionFromDb(transferId) {
+  return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database not initialized'));
+    db.run(`DELETE FROM transmissions WHERE transferId = ?`, [transferId], (err) => {
+      if (err) {
+        console.error('[SQLite] Error deleting transmission:', err.message);
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+function getChatHistoryFromDb() {
+  return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database not initialized'));
+    db.all(`SELECT * FROM chat_messages ORDER BY time ASC`, (err, rows) => {
+      if (err) {
+        console.error('[SQLite] Error loading chat history:', err.message);
+        reject(err);
+      } else {
+        const mapped = rows.map(r => ({
+          id: r.messageId,
+          sender: { id: r.senderId, alias: r.senderAlias },
+          receiverId: r.receiverId,
+          text: r.text,
+          time: r.time
+        }));
+        resolve(mapped);
+      }
+    });
+  });
+}
+
+function getTransmissionsFromDb() {
+  return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database not initialized'));
+    db.all(`SELECT * FROM transmissions ORDER BY timestamp ASC`, (err, rows) => {
+      if (err) {
+        console.error('[SQLite] Error loading transmissions:', err.message);
+        reject(err);
+      } else {
+        const mapped = rows.map(r => ({
+          transferId: r.transferId,
+          name: r.name,
+          size: r.size,
+          transferred: r.transferred,
+          progress: r.progress,
+          status: r.status,
+          durationMs: r.durationMs,
+          receiverId: r.receiverId,
+          senderId: r.senderId,
+          timestamp: r.timestamp,
+          speedHistory: []
+        }));
+        resolve(mapped);
+      }
+    });
+  });
+}
+
+
 function createLocalDevice() {
   const hostname = os.hostname();
   const id = crypto.createHash('sha256').update(`${hostname}-${Date.now()}-${Math.random()}`).digest('hex').slice(0, 16);
@@ -901,9 +1054,36 @@ function shutdownRuntime() {
     udpSocket.close();
     udpSocket = null;
   }
+
+  if (db) {
+    db.close((err) => {
+      if (err) console.error('[SQLite] Error closing database:', err.message);
+      else console.log('[SQLite] Closed database connection.');
+    });
+  }
 }
 
 // IPC Handlers
+ipcMain.handle('db:get-chat-history', async () => {
+  return getChatHistoryFromDb();
+});
+
+ipcMain.handle('db:save-chat-message', async (_event, msg) => {
+  return saveChatMessage(msg);
+});
+
+ipcMain.handle('db:get-transmissions', async () => {
+  return getTransmissionsFromDb();
+});
+
+ipcMain.handle('db:save-transmission', async (_event, trans) => {
+  return saveTransmission(trans);
+});
+
+ipcMain.handle('db:delete-transmission', async (_event, transferId) => {
+  return deleteTransmissionFromDb(transferId);
+});
+
 ipcMain.handle('app:get-info', () => ({
   id: device.id,
   name: device.alias,
@@ -1500,6 +1680,7 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  initDatabase();
   await createWindow();
   log('info', 'App started');
   startLanRuntime();
