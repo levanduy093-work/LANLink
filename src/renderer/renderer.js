@@ -17,7 +17,7 @@ const state = {
   callPeerId: null, // peer ID of the other side of the call
   localStream: null,
   peerConnection: null,
-  isMicEnabled: true,
+  isMicEnabled: false,
   isCamEnabled: true,
   incomingCallPayload: null,
   iceCandidateBuffer: []
@@ -641,7 +641,7 @@ function renderChatMessages() {
   });
 
   if (conversation.length === 0) {
-    els.chatMessages.innerHTML = `<div class="empty-state-text">No messages yet with <strong>${escapeHtml(peerName)}</strong>.<br>Send a message to start conversation!</div>`;
+    els.chatMessages.innerHTML = `<div class="empty-state-text"><p>No messages yet with <strong>${escapeHtml(peerName)}</strong>.</p><p>Send a message to start conversation!</p></div>`;
     return;
   }
 
@@ -973,6 +973,15 @@ async function startCall() {
   try {
     // 1. Get local stream
     state.localStream = await getMediaStream();
+
+    // Default: mic muted, camera on
+    const audioTrack = state.localStream.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = false; // mic muted by default
+    }
+    state.isMicEnabled = false;
+    state.isCamEnabled = true;
+
     if (state.localStream.getVideoTracks().length > 0) {
       els.localVideo.srcObject = state.localStream;
       els.localVideo.style.display = 'block';
@@ -1149,7 +1158,7 @@ function resetCallState() {
   state.callState = 'idle';
   state.callPeerId = null;
   state.incomingCallPayload = null;
-  state.isMicEnabled = true;
+  state.isMicEnabled = false;
   state.isCamEnabled = true;
   state.iceCandidateBuffer = [];
 
