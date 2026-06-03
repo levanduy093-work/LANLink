@@ -282,7 +282,19 @@ function bindEvents() {
   els.scanSubnetBtn.addEventListener('click', async () => {
     const inputVal = els.peerIpInput.value.trim();
     if (!inputVal) {
-      addLog('error', 'Please enter an IP or subnet prefix (e.g. 192.168.1.15) to scan.');
+      els.scanSubnetBtn.disabled = true;
+      addLog('info', 'No custom subnet prefix specified. Re-scanning current active subnet...');
+      els.radarStatusText.textContent = 'Sweeping active subnet...';
+
+      try {
+        await window.lanlink.rescan();
+        addLog('success', 'Active subnet scan completed.');
+      } catch (err) {
+        addLog('error', `Active subnet scan failed: ${err.message}`);
+      } finally {
+        els.scanSubnetBtn.disabled = false;
+        els.radarStatusText.textContent = 'Broadcasting announcements...';
+      }
       return;
     }
 
@@ -298,6 +310,7 @@ function bindEvents() {
 
     try {
       await window.lanlink.scanCustomSubnet(prefix);
+      addLog('success', `Manual subnet sweep for ${prefix}.x completed.`);
     } catch (err) {
       addLog('error', `Manual subnet sweep failed: ${err.message}`);
     } finally {
