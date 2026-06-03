@@ -106,6 +106,14 @@ function getSubnetIps(ip, netmask) {
   return ips;
 }
 
+function isSameSubnet(ip1, ip2) {
+  if (!ip1 || !ip2) return false;
+  const parts1 = ip1.split('.');
+  const parts2 = ip2.split('.');
+  if (parts1.length !== 4 || parts2.length !== 4) return false;
+  return parts1[0] === parts2[0] && parts1[1] === parts2[1] && parts1[2] === parts2[2];
+}
+
 function sendToRenderer(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send(channel, payload);
@@ -117,8 +125,10 @@ function log(type, message, meta = {}) {
 }
 
 function emitDevices() {
+  const activeIp = getLanIp();
   const list = Array.from(devices.values())
     .filter(d => d.id !== device.id)
+    .filter(d => isSameSubnet(d.ip, activeIp))
     .map(d => {
       let status = d.status;
       if (status === 'online' && Date.now() - d.lastSeen >= 12000) {
@@ -631,17 +641,19 @@ function sendUdpAnnouncement() {
 // Active TCP Subnet Scanner
 async function scanSubnets() {
   log('info', 'Starting TCP subnet scanning...');
+  const activeIp = getLanIp();
   const interfaces = getNetworkInterfaces();
-  
-  const scanPromises = [];
-  const scannedIps = new Set();
+  const activeIface = interfaces.find(iface => iface.address === activeIp);
 
-  for (const iface of interfaces) {
-    const ips = getSubnetIps(iface.address, iface.netmask);
-    log('info', `Scanning interface ${iface.name} (${iface.address}) - ${ips.length} IPs...`);
-    ips.forEach(ip => scannedIps.add(ip));
+  if (!activeIface) {
+    log('warning', 'No active interface found for subnet scanning.');
+    return;
   }
 
+  const ips = getSubnetIps(activeIface.address, activeIface.netmask);
+  log('info', `Scanning active interface ${activeIface.name} (${activeIface.address}) - ${ips.length} IPs...`);
+
+  const scannedIps = new Set(ips);
   const ipList = Array.from(scannedIps);
   
   // Implement a batch scanner to prevent socket exhaustion
@@ -848,6 +860,7 @@ ipcMain.handle('app:set-active-ip', (_event, ip) => {
   device.ip = getLanIp();
   upsertDevice(device);
   sendUdpAnnouncement();
+  emitDevices(); // Immediately filter and update nearby devices in UI
   log('info', `Active IP configured: ${device.ip}`);
   return device.ip;
 });
