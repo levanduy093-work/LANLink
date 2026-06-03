@@ -930,6 +930,20 @@ window.deleteTransfer = function(event, transferId) {
 
 // --- WebRTC Video Call Implementation ---
 
+async function getMediaStream() {
+  try {
+    return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  } catch (videoError) {
+    addLog('warning', `Camera not available, falling back to audio-only: ${videoError.message}`);
+    try {
+      return await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+    } catch (audioError) {
+      addLog('error', `Microphone not available: ${audioError.message}`);
+      throw audioError;
+    }
+  }
+}
+
 async function startCall() {
   if (!state.selectedPeerId || state.callState !== 'idle') return;
   
@@ -947,12 +961,13 @@ async function startCall() {
 
   try {
     // 1. Get local stream
-    state.localStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    });
-    els.localVideo.srcObject = state.localStream;
-    els.localVideo.style.display = 'block';
+    state.localStream = await getMediaStream();
+    if (state.localStream.getVideoTracks().length > 0) {
+      els.localVideo.srcObject = state.localStream;
+      els.localVideo.style.display = 'block';
+    } else {
+      els.localVideo.style.display = 'none';
+    }
     
     // 2. Setup RTCPeerConnection
     setupPeerConnection(targetId);
@@ -988,26 +1003,31 @@ function setupPeerConnection(targetId) {
   // ICE Candidate handler
   state.peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
+      addLog('info', `Gathered local ICE candidate: ${event.candidate.candidate.slice(0, 30)}...`);
       window.lanlink.sendSignal({
         signal: { type: 'candidate', candidate: event.candidate },
         targetId
+      }).then(() => {
+        addLog('info', 'Sent ICE candidate to peer.');
       }).catch(err => {
-        console.error("Failed to send ICE candidate:", err);
+        addLog('error', `Failed to send ICE candidate: ${err.message}`);
       });
     }
   };
 
   // Remote track received handler
   state.peerConnection.ontrack = (event) => {
-    addLog('success', 'Remote media stream received.');
+    addLog('success', `Remote media track received: ${event.track.kind}`);
     if (event.streams && event.streams[0]) {
       if (els.remoteVideo.srcObject !== event.streams[0]) {
         els.remoteVideo.srcObject = event.streams[0];
         els.remoteVideo.play().catch(err => console.error("Remote video play failed:", err));
       }
     }
-    els.remoteVideo.style.display = 'block';
-    els.videoPlaceholder.style.display = 'none';
+    if (event.track.kind === 'video') {
+      els.remoteVideo.style.display = 'block';
+      els.videoPlaceholder.style.display = 'none';
+    }
   };
 
   state.peerConnection.oniceconnectionstatechange = () => {
@@ -1044,12 +1064,13 @@ async function acceptCall() {
 
   try {
     // 1. Get local stream
-    state.localStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    });
-    els.localVideo.srcObject = state.localStream;
-    els.localVideo.style.display = 'block';
+    state.localStream = await getMediaStream();
+    if (state.localStream.getVideoTracks().length > 0) {
+      els.localVideo.srcObject = state.localStream;
+      els.localVideo.style.display = 'block';
+    } else {
+      els.localVideo.style.display = 'none';
+    }
 
     // 2. Setup RTCPeerConnection
     setupPeerConnection(sender.id);
@@ -1147,11 +1168,13 @@ async function drainIceCandidates() {
   if (!state.peerConnection || !state.peerConnection.remoteDescription || !state.peerConnection.remoteDescription.type) return;
   const candidates = [...state.iceCandidateBuffer];
   state.iceCandidateBuffer = [];
+  addLog('info', `Draining ${candidates.length} buffered remote ICE candidates...`);
   for (const candidate of candidates) {
     try {
       await state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      addLog('info', 'Added buffered remote ICE candidate.');
     } catch (e) {
-      console.error("Error adding buffered ICE candidate:", e);
+      addLog('error', `Error adding buffered remote ICE candidate: ${e.message}`);
     }
   }
 }
@@ -1269,11 +1292,13 @@ async function handleSignaling(signal, senderId) {
     if (state.peerConnection && state.peerConnection.remoteDescription && state.peerConnection.remoteDescription.type) {
       try {
         await state.peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+        addLog('info', 'Added remote ICE candidate.');
       } catch (err) {
-        console.error("Failed to add ICE candidate:", err);
+        addLog('error', `Failed to add remote ICE candidate: ${err.message}`);
       }
     } else {
       state.iceCandidateBuffer.push(signal.candidate);
+      addLog('info', 'Buffered remote ICE candidate.');
     }
   }
 }
