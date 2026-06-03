@@ -602,8 +602,7 @@ p, .muted {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  flex: 1;
-  min-height: 0;
+  flex-shrink: 0;
 }
 
 .transmitter-tabs {
@@ -887,20 +886,24 @@ p, .muted {
 .video-call-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  flex-shrink: 0;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
 }
 
 .video-call-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
 }
 
 .video-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  flex: 1;
+  min-height: 120px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: var(--radius-md);
