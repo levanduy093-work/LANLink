@@ -19,7 +19,8 @@ const state = {
   peerConnection: null,
   isMicEnabled: true,
   isCamEnabled: true,
-  incomingCallPayload: null
+  incomingCallPayload: null,
+  iceCandidateBuffer: []
 };
 
 // --- DOM Cache ---
@@ -999,7 +1000,12 @@ function setupPeerConnection(targetId) {
   // Remote track received handler
   state.peerConnection.ontrack = (event) => {
     addLog('success', 'Remote media stream received.');
-    els.remoteVideo.srcObject = event.streams[0];
+    if (event.streams && event.streams[0]) {
+      if (els.remoteVideo.srcObject !== event.streams[0]) {
+        els.remoteVideo.srcObject = event.streams[0];
+        els.remoteVideo.play().catch(err => console.error("Remote video play failed:", err));
+      }
+    }
     els.remoteVideo.style.display = 'block';
     els.videoPlaceholder.style.display = 'none';
   };
@@ -1039,6 +1045,7 @@ async function acceptCall() {
 
     // 3. Set remote description
     await state.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    await drainIceCandidates();
 
     // 4. Create and send answer
     const answer = await state.peerConnection.createAnswer();
@@ -1101,6 +1108,7 @@ function resetCallState() {
   state.incomingCallPayload = null;
   state.isMicEnabled = true;
   state.isCamEnabled = true;
+  state.iceCandidateBuffer = [];
 
   // Stop media tracks
   if (state.localStream) {
@@ -1122,6 +1130,19 @@ function resetCallState() {
   els.videoPlaceholder.style.display = 'flex';
   
   updateCallUI();
+}
+
+async function drainIceCandidates() {
+  if (!state.peerConnection || !state.peerConnection.remoteDescription || !state.peerConnection.remoteDescription.type) return;
+  const candidates = [...state.iceCandidateBuffer];
+  state.iceCandidateBuffer = [];
+  for (const candidate of candidates) {
+    try {
+      await state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (e) {
+      console.error("Error adding buffered ICE candidate:", e);
+    }
+  }
 }
 
 function updateCallUI() {
@@ -1210,6 +1231,7 @@ async function handleCallEvent(event, sender, extra) {
       updateCallUI();
       try {
         await state.peerConnection.setRemoteDescription(new RTCSessionDescription(extra.answer));
+        await drainIceCandidates();
       } catch (err) {
         addLog('error', `Failed to set remote description: ${err.message}`);
         hangUpCall();
@@ -1229,13 +1251,18 @@ async function handleCallEvent(event, sender, extra) {
 }
 
 async function handleSignaling(signal, senderId) {
-  if (senderId !== state.callPeerId) return;
+  const isTargetPeer = senderId === state.callPeerId || (state.incomingCallPayload && senderId === state.incomingCallPayload.sender.id);
+  if (!isTargetPeer) return;
 
-  if (signal.type === 'candidate' && state.peerConnection) {
-    try {
-      await state.peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
-    } catch (err) {
-      console.error("Failed to add remote ICE candidate:", err);
+  if (signal.type === 'candidate') {
+    if (state.peerConnection && state.peerConnection.remoteDescription && state.peerConnection.remoteDescription.type) {
+      try {
+        await state.peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+      } catch (err) {
+        console.error("Failed to add ICE candidate:", err);
+      }
+    } else {
+      state.iceCandidateBuffer.push(signal.candidate);
     }
   }
 }
