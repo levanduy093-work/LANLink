@@ -821,6 +821,14 @@ function renderTransmissions() {
       `;
     }
 
+    let etaText = '';
+    if ((item.status === 'sending' || item.status === 'receiving') && item.speedMbps && item.speedMbps > 0) {
+      const remainingBytes = item.size - item.transferred;
+      const speedBytesPerSec = (item.speedMbps * 1000000) / 8;
+      const etaSeconds = Math.max(0, Math.round(remainingBytes / speedBytesPerSec));
+      etaText = ` • ~${formatDuration(etaSeconds * 1000)}`;
+    }
+
     return `
       <div class="transfer-card" onclick="openSpeedChartModal('${item.transferId}')" style="cursor: pointer;">
         <div class="transfer-card-header">
@@ -833,7 +841,7 @@ function renderTransmissions() {
         </div>
         <div class="transfer-card-footer">
           <span>${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}</span>
-          <span>${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}</span>
+          <span>${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}</span>
         </div>
       </div>
     `;
