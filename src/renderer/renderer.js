@@ -49,7 +49,7 @@ const els = {
   selectedFileName: document.getElementById('selectedFileName'),
   selectedFileSize: document.getElementById('selectedFileSize'),
   clearFileBtn: document.getElementById('clearFileBtn'),
-  
+
   // Chat DOMs
   textMessageForm: document.getElementById('textMessageForm'),
   textMessageInput: document.getElementById('textMessageInput'),
@@ -62,7 +62,7 @@ const els = {
   transferList: document.getElementById('transferList'),
   eventLog: document.getElementById('eventLog'),
   clearLogBtn: document.getElementById('clearLogBtn'),
-  
+
   // Invite Modal
   incomingInviteModal: document.getElementById('incomingInviteModal'),
   inviteSenderName: document.getElementById('inviteSenderName'),
@@ -92,7 +92,7 @@ const els = {
   callPlaceholderText: document.getElementById('callPlaceholderText'),
   callStatusBadge: document.getElementById('callStatusBadge'),
   callActiveActions: document.getElementById('callActiveActions'),
-  
+
   // Incoming Call Modal DOMs
   incomingCallModal: document.getElementById('incomingCallModal'),
   incomingCallSenderName: document.getElementById('incomingCallSenderName'),
@@ -123,7 +123,7 @@ boot();
 
 async function boot() {
   addLog('info', 'Đang khởi động giao diện truyền dẫn quang PON...');
-  
+
   try {
     // 1. Get local device info
     state.me = await window.lanlink.getInfo();
@@ -228,7 +228,7 @@ async function refreshInterfaces(force = false) {
           state.me.ip = newIp;
           addLog('info', `Đã chuyển giao diện IP hoạt động sang: ${newIp}`);
           refreshInterfaces(true);
-          
+
           // Automatically trigger network discovery sweep on the new active interface
           addLog('info', `Đang khởi chạy quét thiết bị trên giao diện ${newIp}...`);
           window.lanlink.rescan().catch(err => {
@@ -269,7 +269,7 @@ function bindEvents() {
   els.fileDropzone.addEventListener('drop', (e) => {
     e.preventDefault();
     els.fileDropzone.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-    
+
     const file = e.dataTransfer.files[0];
     if (file) {
       selectLocalFile({
@@ -377,7 +377,7 @@ function bindEvents() {
     els.rescanBtn.disabled = true;
     addLog('info', 'Đang quét mạng LAN hoạt động (UDP Multicast + TCP scan)...');
     els.radarStatusText.textContent = 'Đang quét dải mạng con...';
-    
+
     try {
       await window.lanlink.rescan();
     } catch (err) {
@@ -415,7 +415,7 @@ function bindEvents() {
   els.hangUpBtn.addEventListener('click', hangUpCall);
   els.toggleMicBtn.addEventListener('click', toggleMicrophone);
   els.toggleCamBtn.addEventListener('click', toggleCamera);
-  
+
   // Call Modal buttons
   els.acceptCallBtn.addEventListener('click', acceptCall);
   els.declineCallBtn.addEventListener('click', declineCall);
@@ -451,7 +451,7 @@ function registerIpcListeners() {
   window.lanlink.onDevices((devicesList) => {
     state.devices = devicesList;
     renderPeersGrid();
-    
+
     // If our selected peer went offline, disable input
     if (state.selectedPeerId && !devicesList.some(d => d.id === state.selectedPeerId && d.status === 'online')) {
       state.selectedPeerId = null;
@@ -468,7 +468,7 @@ function registerIpcListeners() {
   // Incoming Transfer invite modal trigger
   window.lanlink.onInvite((invite) => {
     state.currentInvite = invite;
-    
+
     els.inviteSenderName.textContent = invite.sender.alias;
     els.inviteFileList.innerHTML = invite.files.map(f => `
       <div class="invite-file-item">
@@ -555,7 +555,7 @@ function registerIpcListeners() {
     window.lanlink.saveChatMessage(msg).catch(err => {
       console.error('Failed to save message to DB:', err);
     });
-    
+
     const isSent = msg.sender.id === state.me.id;
     if (!isSent) {
       addLog('success', `Tin nhắn từ ${msg.sender.alias}: "${msg.text}"`);
@@ -610,7 +610,7 @@ function switchTab(tab) {
     els.tabTextContent.style.display = 'flex';
     els.tabLogContent.style.display = 'none';
     els.transmitBtn.style.display = 'none'; // Chat has its own submit composer button
-    
+
     renderChatMessages();
   } else if (tab === 'log') {
     els.tabFilesBtn.classList.remove('active');
@@ -639,10 +639,10 @@ function selectLocalFile(file) {
   state.selectedFile = file;
   els.selectedFileName.textContent = file.name;
   els.selectedFileSize.textContent = formatBytes(file.size);
-  
+
   els.fileDropzone.style.display = 'none';
   els.selectedFileCard.style.display = 'flex';
-  
+
   updateTransmitButtonState();
 }
 
@@ -652,7 +652,7 @@ function selectPeer(peerId) {
   } else {
     state.selectedPeerId = peerId;
   }
-  
+
   renderPeersGrid();
   renderChatMessages();
   updateTransmitButtonState();
@@ -732,7 +732,7 @@ function updateTransmitButtonState() {
 // Transmit Data Action (REST POST to Peer HTTP Server for Files)
 async function transmitData() {
   if (!state.selectedPeerId || state.activeTab !== 'files') return;
-  
+
   const peer = state.devices.find(d => d.id === state.selectedPeerId);
   if (!peer) {
     addLog('error', 'Thiết bị được chọn đã ngoại tuyến hoặc không hợp lệ');
@@ -749,7 +749,7 @@ async function transmitData() {
       targets: [peer.id]
     });
     addLog('success', `Đã gửi xong tệp ${file.name} tới ${peer.alias}`);
-    
+
     // Clear file selection
     state.selectedFile = null;
     els.selectedFileCard.style.display = 'none';
@@ -765,7 +765,7 @@ async function transmitData() {
 async function acceptIncomingInvite() {
   if (!state.currentInvite) return;
   const sessionId = state.currentInvite.sessionId;
-  
+
   els.incomingInviteModal.classList.remove('open');
   addLog('info', `Đang chấp nhận lời mời nhận tệp đến...`);
 
@@ -784,7 +784,7 @@ async function acceptIncomingInvite() {
 async function declineIncomingInvite() {
   if (!state.currentInvite) return;
   const sessionId = state.currentInvite.sessionId;
-  
+
   els.incomingInviteModal.classList.remove('open');
   addLog('warning', `Đang từ chối lời mời nhận tệp đến...`);
 
@@ -801,7 +801,7 @@ async function declineIncomingInvite() {
 
 function renderPeersGrid() {
   const onlinePeers = state.devices.filter(d => d.status === 'online');
-  
+
   if (onlinePeers.length === 0) {
     els.deviceList.innerHTML = '';
     els.radarContainer.style.display = 'flex';
@@ -910,7 +910,7 @@ function renderTransmissions() {
       const pauseIcon = isPaused
         ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>` // Play
         : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`; // Pause
-      
+
       actionsHtml = `
         <div class="transfer-actions">
           <button class="btn-icon-action" onclick="togglePauseTransfer(event, '${item.transferId}')" title="${isPaused ? 'Tiếp tục' : 'Tạm dừng'}">
@@ -976,7 +976,7 @@ function addLog(type, message) {
     <span class="log-label">${escapeHtml(type)}:</span>
     <span class="log-text">${escapeHtml(message)}</span>
   `;
-  
+
   els.eventLog.appendChild(logRow);
   els.eventLog.scrollTop = els.eventLog.scrollHeight;
 }
@@ -1000,10 +1000,10 @@ function formatProgressBytes(transferred, total, decimals = 2) {
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(tot) / Math.log(k));
-  
+
   const totalScaled = parseFloat((tot / Math.pow(k, i)).toFixed(dm));
   const transferredScaled = parseFloat((t / Math.pow(k, i)).toFixed(dm));
-  
+
   return `${transferredScaled} / ${totalScaled} ${sizes[i]}`;
 }
 
@@ -1029,21 +1029,21 @@ function formatDuration(ms) {
 
 // --- Speed Chart Modal & Actions ---
 
-window.openSpeedChartModal = function(transferId) {
+window.openSpeedChartModal = function (transferId) {
   const item = state.activeTransfers.get(transferId);
   if (!item) return;
 
   state.activeChartSessionId = transferId;
-  
+
   // Set modal texts
   els.chartModalTitle.textContent = item.name;
-  
+
   // Open modal in DOM
   els.speedChartModal.classList.add('open');
 
   // Create Chart
   const ctx = document.getElementById('speedChartCanvas').getContext('2d');
-  
+
   // Extract history
   const history = item.speedHistory || [];
   const data = history.map(h => h.speed / 8); // convert to MB/s
@@ -1095,7 +1095,7 @@ window.openSpeedChartModal = function(transferId) {
   updateActiveChart(item);
 };
 
-window.closeSpeedChartModal = function() {
+window.closeSpeedChartModal = function () {
   els.speedChartModal.classList.remove('open');
   state.activeChartSessionId = null;
   if (state.speedChartInstance) {
@@ -1141,7 +1141,7 @@ function updateModalButtons(item) {
     els.modalDeleteBtn.style.display = 'none';
 
     els.modalPauseBtn.textContent = item.status === 'paused' ? 'Tiếp tục' : 'Tạm dừng';
-    
+
     // Set up click handlers dynamically for the modal buttons
     els.modalPauseBtn.onclick = (e) => window.togglePauseTransfer(e, item.transferId);
     els.modalCancelBtn.onclick = (e) => {
@@ -1160,7 +1160,7 @@ function updateModalButtons(item) {
   }
 }
 
-window.togglePauseTransfer = async function(event, transferId) {
+window.togglePauseTransfer = async function (event, transferId) {
   if (event) event.stopPropagation();
   try {
     const result = await window.lanlink.togglePauseTransfer(transferId);
@@ -1172,7 +1172,7 @@ window.togglePauseTransfer = async function(event, transferId) {
   }
 };
 
-window.cancelTransfer = async function(event, transferId) {
+window.cancelTransfer = async function (event, transferId) {
   if (event) event.stopPropagation();
   try {
     const result = await window.lanlink.cancelTransfer(transferId);
@@ -1184,7 +1184,7 @@ window.cancelTransfer = async function(event, transferId) {
   }
 };
 
-window.deleteTransfer = function(event, transferId) {
+window.deleteTransfer = function (event, transferId) {
   if (event) event.stopPropagation();
   state.activeTransfers.delete(transferId);
   renderTransmissions();
@@ -1213,7 +1213,7 @@ async function getMediaStream() {
 
 async function startCall() {
   if (!state.selectedPeerId || state.callState !== 'idle') return;
-  
+
   const targetId = state.selectedPeerId;
   const peer = state.devices.find(d => d.id === targetId);
   if (!peer) {
@@ -1244,7 +1244,7 @@ async function startCall() {
     } else {
       els.localVideo.style.display = 'none';
     }
-    
+
     // 2. Setup RTCPeerConnection
     setupPeerConnection(targetId);
 
@@ -1333,7 +1333,7 @@ async function acceptCall() {
 
   const { sender, offer } = state.incomingCallPayload;
   addLog('success', `Chấp nhận cuộc gọi từ ${sender.alias}`);
-  
+
   state.callState = 'connected';
   state.callPeerId = sender.id;
   updateCallUI();
@@ -1377,7 +1377,7 @@ async function acceptCall() {
   } catch (err) {
     addLog('error', `Chấp nhận cuộc gọi thất bại: ${err.message}`);
     // Notify peer of failure
-    window.lanlink.sendCallEvent({ event: 'decline', targetId: sender.id }).catch(() => {});
+    window.lanlink.sendCallEvent({ event: 'decline', targetId: sender.id }).catch(() => { });
     resetCallState();
   }
 }
@@ -1385,10 +1385,10 @@ async function acceptCall() {
 async function declineCall() {
   if (!state.incomingCallPayload) return;
   els.incomingCallModal.classList.remove('open');
-  
+
   const { sender } = state.incomingCallPayload;
   addLog('info', `Cuộc gọi từ ${sender.alias} đã bị từ chối.`);
-  
+
   try {
     await window.lanlink.sendCallEvent({
       event: 'decline',
@@ -1445,7 +1445,7 @@ function resetCallState() {
   els.remoteVideo.style.display = 'none';
   els.remoteVideo.srcObject = null;
   els.videoPlaceholder.style.display = 'flex';
-  
+
   updateCallUI();
 }
 
@@ -1466,24 +1466,24 @@ async function drainIceCandidates() {
 
 function updateCallUI() {
   els.callStatusBadge.textContent = state.callState.toUpperCase();
-  
+
   // Style status badge
   els.callStatusBadge.className = 'badge';
   if (state.callState === 'connected') {
     els.callStatusBadge.style.color = 'var(--status-green)';
     els.callStatusBadge.style.borderColor = 'rgba(53, 208, 127, 0.2)';
     els.callStatusBadge.style.background = 'var(--status-green-faint)';
-    
+
     els.startCallBtn.style.display = 'none';
     els.callActiveActions.style.display = 'flex';
   } else if (state.callState === 'calling' || state.callState === 'ringing') {
     els.callStatusBadge.style.color = 'var(--status-amber)';
     els.callStatusBadge.style.borderColor = 'rgba(247, 185, 85, 0.2)';
     els.callStatusBadge.style.background = 'var(--status-amber-faint)';
-    
+
     els.startCallBtn.style.display = 'none';
     els.callActiveActions.style.display = 'flex';
-    
+
     if (state.callState === 'calling') {
       els.callPlaceholderText.textContent = "Đang đổ chuông thiết bị đối tác...";
     }
@@ -1492,10 +1492,10 @@ function updateCallUI() {
     els.callStatusBadge.style.color = 'var(--text-faint)';
     els.callStatusBadge.style.borderColor = 'rgba(255, 255, 255, 0.08)';
     els.callStatusBadge.style.background = 'rgba(255, 255, 255, 0.02)';
-    
+
     els.startCallBtn.style.display = 'inline-flex';
     els.callActiveActions.style.display = 'none';
-    
+
     els.callPlaceholderText.textContent = "Sẵn sàng bắt đầu cuộc gọi LAN";
   }
 
@@ -1533,7 +1533,7 @@ async function handleCallEvent(event, sender, extra) {
   if (event === 'invite') {
     if (state.callState !== 'idle') {
       // Busy
-      window.lanlink.sendCallEvent({ event: 'decline', targetId: sender.id }).catch(() => {});
+      window.lanlink.sendCallEvent({ event: 'decline', targetId: sender.id }).catch(() => { });
       return;
     }
     state.callState = 'ringing';
@@ -1542,7 +1542,7 @@ async function handleCallEvent(event, sender, extra) {
     els.incomingCallModal.classList.add('open');
     addLog('warning', `Cuộc gọi video đến từ ${sender.alias}`);
     updateCallUI();
-  } 
+  }
   else if (event === 'accept') {
     if (state.callState === 'calling' && state.peerConnection) {
       addLog('success', `${sender.alias} đã chấp nhận cuộc gọi.`);
@@ -1556,13 +1556,13 @@ async function handleCallEvent(event, sender, extra) {
         hangUpCall();
       }
     }
-  } 
+  }
   else if (event === 'decline') {
     if (state.callState === 'calling' || state.callState === 'ringing') {
       addLog('warning', `Cuộc gọi bị từ chối bởi ${sender.alias}`);
       resetCallState();
     }
-  } 
+  }
   else if (event === 'hangup') {
     addLog('info', `${sender.alias} đã kết thúc cuộc gọi.`);
     resetCallState();
@@ -1620,17 +1620,17 @@ function startManualPing(ip) {
 function addPingConsoleLine(line) {
   const lineEl = document.createElement('div');
   lineEl.textContent = line;
-  
+
   if (/timeout|fail|error/i.test(line)) {
     lineEl.style.color = '#ff3b30'; // red
   } else if (/from|Reply/i.test(line)) {
     lineEl.style.color = '#4cd964'; // green
-    
+
     // Progress increment (4 packets total)
     pingSequenceCount = Math.min(4, pingSequenceCount + 1);
     els.pingProgressBar.style.width = `${(pingSequenceCount / 4) * 100}%`;
   }
-  
+
   els.pingConsole.appendChild(lineEl);
   els.pingConsole.scrollTop = els.pingConsole.scrollHeight;
 }
@@ -1653,7 +1653,7 @@ function handlePingDone(stats) {
     els.pingAvgRtt.textContent = stats.avg;
 
     const ratingEl = els.pingSpeedRating;
-    
+
     if (stats.lossPercent > 50) {
       ratingEl.style.background = 'rgba(255, 59, 48, 0.1)';
       ratingEl.style.color = '#ff3b30';
