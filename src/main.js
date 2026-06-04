@@ -188,7 +188,7 @@ function createLocalDevice() {
   return {
     id,
     name: hostname,
-    alias: `${hostname} (LANLink)`,
+    alias: `${hostname} (PON)`,
     ip: '127.0.0.1',
     port: APP_PORT,
     deviceModel: os.type() === 'Darwin' ? 'macOS' : 'Windows',
@@ -279,12 +279,12 @@ function log(type, message, meta = {}) {
 
 function emitDevices() {
   const activeIp = getLanIp();
-  log('info', `[emitDevices] activeIp: ${activeIp}, total devices in map: ${devices.size}`);
+  log('info', `[emitDevices] activeIp: ${activeIp}, tổng số thiết bị trong bản đồ: ${devices.size}`);
   const list = Array.from(devices.values())
     .filter(d => d.id !== device.id)
     .filter(d => {
       const match = isSameSubnet(d.ip, activeIp);
-      log('info', `[emitDevices] checking peer: ${d.alias} (${d.ip}), isSameSubnet: ${match}`);
+      log('info', `[emitDevices] đang kiểm tra thiết bị: ${d.alias} (${d.ip}), isSameSubnet: ${match}`);
       return match;
     })
     .map(d => {
@@ -297,7 +297,7 @@ function emitDevices() {
         status
       };
     });
-  log('info', `[emitDevices] sending list size: ${list.length} to renderer.`);
+  log('info', `[emitDevices] đang gửi danh sách kích thước ${list.length} tới renderer.`);
   sendToRenderer('lan:devices', list);
 }
 
@@ -489,7 +489,7 @@ function startHttpServer() {
               files: Object.values(files)
             });
 
-            log('warning', `Incoming transfer request from ${sender.alias} (${Object.keys(files).length} files)`);
+            log('warning', `Yêu cầu truyền tải đến từ ${sender.alias} (${Object.keys(files).length} tệp)`);
 
           }).catch(err => {
             res.writeHead(400);
@@ -551,7 +551,7 @@ function startHttpServer() {
             return;
           }
 
-          const dir = path.join(app.getPath('downloads'), 'LANLinkReceived');
+          const dir = path.join(app.getPath('downloads'), 'PONReceived');
           fs.mkdirSync(dir, { recursive: true });
           const safeName = file.fileName.replace(/[\\/:*?"<>|]/g, '_');
           const filePath = path.join(dir, `${Date.now()}-${safeName}`);
@@ -606,7 +606,7 @@ function startHttpServer() {
             activeTransfers.delete(sessionId);
             writeStream.end();
             file.status = 'completed';
-            log('success', `File received: ${file.fileName}`);
+            log('success', `Đã nhận tệp: ${file.fileName}`);
 
             sendToRenderer('file:progress', {
               transferId: sessionId,
@@ -632,7 +632,7 @@ function startHttpServer() {
             }
 
             if (allFinished) {
-              log('success', 'All file transfers completed');
+              log('success', 'Tất cả các tiến trình truyền tệp đã hoàn tất');
               activeIncomingSession = null;
               pendingIncomingSessions.delete(sessionId);
             }
@@ -645,7 +645,7 @@ function startHttpServer() {
             activeTransfers.delete(sessionId);
             writeStream.end();
             file.status = 'failed';
-            log('error', `Error receiving file ${file.fileName}: ${err.message}`);
+            log('error', `Lỗi khi nhận tệp ${file.fileName}: ${err.message}`);
             sendToRenderer('file:progress', {
               transferId: sessionId,
               status: 'failed',
@@ -661,7 +661,7 @@ function startHttpServer() {
           const session = activeIncomingSession;
 
           if (session && session.sessionId === sessionId) {
-            log('warning', `Transfer canceled by sender`);
+             log('warning', `Tiến trình truyền tải bị hủy bởi người gửi`);
             activeIncomingSession = null;
             pendingIncomingSessions.delete(sessionId);
             sendToRenderer('file:progress', {
@@ -702,16 +702,16 @@ function startHttpServer() {
       httpServer.listen(port, '0.0.0.0', () => {
         device.port = port;
         APP_PORT = port;
-        log('success', `Local HTTP server running on port ${port}`);
+        log('success', `HTTP server cục bộ đang chạy trên cổng ${port}`);
         resolve(port);
       });
 
       httpServer.on('error', (err) => {
         if (err.code === 'EADDRINUSE' && port < 53327) {
-          log('info', `Port ${port} in use, trying next...`);
+          log('info', `Cổng ${port} đang được sử dụng, đang thử cổng tiếp theo...`);
           tryBind(port + 1);
         } else {
-          log('error', `Failed to start HTTP server: ${err.message}`);
+          log('error', `Khởi động HTTP server thất bại: ${err.message}`);
           resolve(null);
         }
       });
@@ -750,7 +750,7 @@ function startUdpDiscovery() {
   });
 
   udpSocket.on('error', (err) => {
-    log('error', `UDP discovery error: ${err.message}`);
+    log('error', `Lỗi phát hiện thiết bị qua UDP: ${err.message}`);
   });
 
   udpSocket.bind(UDP_PORT, () => {
@@ -765,9 +765,9 @@ function startUdpDiscovery() {
           // Multicast join failed on this interface (e.g. not multicast-capable)
         }
       }
-      log('info', 'UDP Multicast discovery listening');
+      log('info', 'UDP Multicast đang lắng nghe để phát hiện thiết bị');
     } catch (e) {
-      log('error', `Failed to initialize UDP Multicast: ${e.message}`);
+      log('error', `Khởi tạo UDP Multicast thất bại: ${e.message}`);
     }
   });
 }
@@ -836,18 +836,18 @@ function sendUdpAnnouncement() {
 
 // Active TCP Subnet Scanner
 async function scanSubnets() {
-  log('info', 'Starting TCP subnet scanning...');
+  log('info', 'Bắt đầu quét mạng con qua TCP...');
   const activeIp = getLanIp();
   const interfaces = getNetworkInterfaces();
   const activeIface = interfaces.find(iface => iface.address === activeIp);
 
   if (!activeIface) {
-    log('warning', 'No active interface found for subnet scanning.');
+    log('warning', 'Không tìm thấy giao diện hoạt động nào để quét mạng con.');
     return;
   }
 
   const ips = getSubnetIps(activeIface.address, activeIface.netmask);
-  log('info', `Scanning active interface ${activeIface.name} (${activeIface.address}) - ${ips.length} IPs...`);
+  log('info', `Đang quét giao diện hoạt động ${activeIface.name} (${activeIface.address}) - ${ips.length} IP...`);
 
   const scannedIps = new Set(ips);
   const ipList = Array.from(scannedIps);
@@ -860,7 +860,7 @@ async function scanSubnets() {
     await Promise.all(batchPromises);
   }
   
-  log('success', 'Subnet scanning completed.');
+  log('success', 'Quét mạng con hoàn tất.');
 }
 
 function checkPeerRegistration(ip) {
@@ -903,7 +903,7 @@ function checkPeerRegistration(ip) {
             try {
               const info = JSON.parse(data);
               upsertDevice({ ...info, ip });
-              log('success', `Discovered peer via scan: ${info.alias} at ${ip}`);
+              log('success', `Phát hiện thiết bị qua quét mạng: ${info.alias} tại ${ip}`);
             } catch (e) {
               // Ignore JSON parsing errors
             }
@@ -947,7 +947,7 @@ function startPingLoop() {
         peer.pingFailures = (peer.pingFailures || 0) + 1;
         if ((reason === 'ECONNREFUSED' || reason === 'EHOSTUNREACH' || peer.pingFailures >= 2) && peer.status === 'online') {
           peer.status = 'offline';
-          log('warning', `Device went offline: ${peer.alias} (${reason})`);
+          log('warning', `Thiết bị đã ngoại tuyến: ${peer.alias} (${reason})`);
           emitDevices();
         }
       };
@@ -1017,7 +1017,7 @@ function startLanRuntime() {
     // Check if active IP has changed due to interface connection/disconnection
     const currentActiveIp = getLanIp();
     if (device.ip !== currentActiveIp) {
-      log('info', `Network change: Active IP auto-switched from ${device.ip} to ${currentActiveIp}`);
+      log('info', `Thay đổi mạng: Tự động chuyển IP hoạt động từ ${device.ip} sang ${currentActiveIp}`);
       console.log(`[Network Switch] Active IP changed from ${device.ip} to ${currentActiveIp}`);
       device.ip = currentActiveIp;
       upsertDevice(device);
@@ -1032,7 +1032,7 @@ function startLanRuntime() {
       if (Date.now() - d.lastSeen > 12000 && d.status === 'online') {
         d.status = 'offline';
         changed = true;
-        log('warning', `Device went offline: ${d.alias}`);
+        log('warning', `Thiết bị đã ngoại tuyến: ${d.alias}`);
       }
     }
     if (changed) emitDevices();
@@ -1102,7 +1102,7 @@ ipcMain.handle('app:set-active-ip', (_event, ip) => {
   upsertDevice(device);
   sendUdpAnnouncement();
   emitDevices(); // Immediately filter and update nearby devices in UI
-  log('info', `Active IP configured: ${device.ip}`);
+  log('info', `Đã cấu hình IP hoạt động: ${device.ip}`);
   return device.ip;
 });
 
@@ -1125,7 +1125,7 @@ ipcMain.handle('lan:accept-invite', (_event, sessionId) => {
     files: session.fileTokens
   }));
 
-  log('info', `Accepted transfer session ${sessionId}`);
+  log('info', `Đã chấp nhận phiên truyền tải ${sessionId}`);
   return { ok: true };
 });
 
@@ -1141,7 +1141,7 @@ ipcMain.handle('lan:decline-invite', (_event, sessionId) => {
     activeIncomingSession = null;
   }
 
-  log('info', `Declined transfer session ${sessionId}`);
+  log('info', `Đã từ chối phiên truyền tải ${sessionId}`);
   return { ok: true };
 });
 
@@ -1152,7 +1152,7 @@ ipcMain.handle('lan:rescan', async () => {
 });
 
 ipcMain.handle('lan:scan-custom-subnet', async (_event, prefix) => {
-  log('info', `Starting manual TCP subnet scan for prefix ${prefix}.x...`);
+  log('info', `Bắt đầu quét thủ công mạng con TCP cho tiền tố ${prefix}.x...`);
   const scannedIps = [];
   for (let i = 1; i <= 254; i++) {
     scannedIps.push(`${prefix}.${i}`);
@@ -1166,7 +1166,7 @@ ipcMain.handle('lan:scan-custom-subnet', async (_event, prefix) => {
     await Promise.all(batchPromises);
   }
 
-  log('success', `Manual subnet scan for ${prefix}.x completed.`);
+  log('success', `Quét thủ công mạng con ${prefix}.x hoàn tất.`);
   return { ok: true };
 });
 
@@ -1182,7 +1182,7 @@ ipcMain.handle('file:send', async (_event, payload) => {
   const fileName = path.basename(filePath);
   const fileId = crypto.randomBytes(8).toString('hex');
 
-  log('info', `Initiating transfer of ${fileName} to ${peer.alias}...`);
+  log('info', `Đang bắt đầu truyền tệp ${fileName} tới ${peer.alias}...`);
 
   // Step 1: Prepare upload
   const preparePayload = JSON.stringify({
@@ -1251,7 +1251,7 @@ ipcMain.handle('file:send', async (_event, payload) => {
   const token = fileTokens[fileId];
   if (!token) throw new Error('Receiver did not authorize the file upload');
 
-  log('info', `File transfer approved. Starting binary upload...`);
+  log('info', `Truyền tệp được phê duyệt. Bắt đầu tải lên dữ liệu...`);
 
   // Step 2: Upload file
   return new Promise((resolve, reject) => {
@@ -1272,7 +1272,7 @@ ipcMain.handle('file:send', async (_event, payload) => {
       res.on('end', () => {
         activeTransfers.delete(sessionId);
         if (res.statusCode === 200) {
-          log('success', `File ${fileName} sent successfully`);
+          log('success', `Đã gửi tệp ${fileName} thành công`);
           sendToRenderer('file:progress', {
             transferId: sessionId,
             receiverId: targetId,
@@ -1368,7 +1368,7 @@ ipcMain.handle('chat:send', async (_event, payload) => {
   const fileId = crypto.randomBytes(8).toString('hex');
   const fileName = 'text.txt';
 
-  log('info', `Sending text message to ${peer.alias}...`);
+  log('info', `Đang gửi tin nhắn văn bản tới ${peer.alias}...`);
 
   // Step 1: Prepare upload
   const preparePayload = JSON.stringify({
@@ -1471,7 +1471,7 @@ ipcMain.handle('lan:cancel-transfer', async (_event, sessionId) => {
   const transfer = activeTransfers.get(sessionId);
   if (!transfer) return { ok: false, error: 'Transfer not found' };
 
-  log('warning', `Manually canceling transfer ${sessionId}...`);
+  log('warning', `Đang hủy truyền tải ${sessionId} thủ công...`);
 
   // 1. Notify the remote peer of cancellation
   try {
@@ -1525,7 +1525,7 @@ ipcMain.handle('lan:toggle-pause-transfer', async (_event, sessionId) => {
 
   if (transfer.isPaused) {
     // Resume
-    log('info', `Resuming transfer ${sessionId}...`);
+    log('info', `Đang tiếp tục truyền tải ${sessionId}...`);
     if (transfer.type === 'send') {
       transfer.stream.resume();
     } else {
@@ -1539,7 +1539,7 @@ ipcMain.handle('lan:toggle-pause-transfer', async (_event, sessionId) => {
     });
   } else {
     // Pause
-    log('info', `Pausing transfer ${sessionId}...`);
+    log('info', `Đang tạm dừng truyền tải ${sessionId}...`);
     if (transfer.type === 'send') {
       transfer.stream.pause();
     } else {
@@ -1646,7 +1646,7 @@ ipcMain.handle('lan:connect-peer', async (_event, ip) => {
   const peerIp = String(ip || '').trim();
   if (!isValidIpv4(peerIp)) throw new Error('Invalid IP Address');
   
-  log('info', `Manually probing peer at ${peerIp}...`);
+  log('info', `Đang kiểm tra thiết bị thủ công tại ${peerIp}...`);
   await checkPeerRegistration(peerIp);
   return { ok: true, ip: peerIp };
 });
@@ -1668,7 +1668,7 @@ async function createWindow() {
     minWidth: 1180,
     minHeight: 720,
     backgroundColor: '#081018',
-    title: 'LANLink',
+    title: 'Hệ thống truyền dẫn quang PON',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -1682,7 +1682,7 @@ async function createWindow() {
 app.whenReady().then(async () => {
   initDatabase();
   await createWindow();
-  log('info', 'App started');
+  log('info', 'Ứng dụng đã khởi động');
   startLanRuntime();
 });
 

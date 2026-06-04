@@ -1,183 +1,183 @@
 # LANLink
 
-LANLink is a cross-platform Electron desktop app for communication between two computers on the same LAN. It uses manual peer IP entry, Socket.IO for realtime coordination, chunked LAN file transfer, Chart.js for transfer speed telemetry, and WebRTC for 1-to-1 voice/video calls.
+LANLink là ứng dụng máy tính đa nền tảng viết bằng Electron phục vụ giao tiếp giữa hai máy tính trong cùng mạng LAN. Ứng dụng cho phép nhập thủ công IP của thiết bị đối tác, sử dụng Socket.IO để phối hợp thời gian thực, truyền tệp cục bộ theo dạng phân đoạn (chunked), Chart.js để hiển thị tốc độ truyền dữ liệu thời gian thực, và WebRTC cho các cuộc gọi thoại/video 1-đối-1.
 
-## UI/UX Design Plan
+## Kế hoạch Thiết kế UI/UX
 
-LANLink is designed before implementation as a modern dark desktop dashboard for a school project demonstration. The interface keeps operational status visible at all times, avoids a default HTML look, and uses clear panel separation for local IP selection, manual peer connection, messaging, file transfer, charts, calls, and logs.
+LANLink được thiết kế trước khi triển khai dưới dạng một bảng điều khiển (dashboard) giao diện tối (dark theme) hiện đại nhằm phục vụ trình diễn dự án trường học. Giao diện luôn hiển thị trạng thái hoạt động trực quan, loại bỏ giao diện mặc định thô sơ của HTML, sử dụng phân tách rõ ràng giữa các phân vùng để lựa chọn IP cục bộ, kết nối thủ công thiết bị đối tác, nhắn tin, truyền tệp, biểu đồ, cuộc gọi và nhật ký hoạt động.
 
-### 1. UI/UX Analysis
+### 1. Phân tích UI/UX
 
-- Primary users: students demonstrating LAN communication on multiple computers.
-- Main goal: quickly pair two devices by IP, then send messages, files, and start a 1-to-1 voice/video call.
-- UX priorities: visible connection state, simple target selection, per-device transfer feedback, readable realtime logs, and stable 1366x768 / 1920x1080 layouts.
+- Người dùng mục tiêu: học sinh/sinh viên trình diễn giao tiếp LAN trên nhiều máy tính.
+- Mục tiêu chính: nhanh chóng ghép nối hai thiết bị bằng IP, sau đó gửi tin nhắn, truyền tệp và bắt đầu cuộc gọi thoại/video 1-đối-1.
+- Ưu tiên UX: hiển thị rõ trạng thái kết nối, lựa chọn đích truyền tải đơn giản, phản hồi tiến trình truyền tải cho từng thiết bị, nhật ký hệ thống thời gian thực dễ đọc, và bố cục hiển thị ổn định trên độ phân giải 1366x768 / 1920x1080.
 
-### 2. Overall App Layout
+### 2. Bố cục Tổng thể Ứng dụng
 
-- Left sidebar: local Wi-Fi/LAN IP list, peer IP input, paired device list, and target selection.
-- Top status bar: role, local IP, connection status, online device count, average RTT.
-- Center workspace: text chat and file transfer.
-- Right rail: transfer speed chart and voice/video call panel.
-- Bottom panel: timestamped realtime event log.
+- Thanh bên trái (Sidebar): Danh sách IP mạng con/Wi-Fi cục bộ, ô nhập IP thiết bị đối tác, danh sách thiết bị đã ghép nối và lựa chọn mục tiêu truyền tải.
+- Thanh trạng thái phía trên: Vai trò thiết bị, IP cục bộ, trạng thái kết nối, số lượng thiết bị trực tuyến, giá trị ping RTT trung bình.
+- Không gian làm việc trung tâm: Khung trò chuyện văn bản và truyền tệp tin.
+- Cột bên phải: Biểu đồ tốc độ truyền dữ liệu và khung cuộc gọi thoại/video.
+- Phân vùng phía dưới: Nhật ký sự kiện thời gian thực kèm mốc thời gian.
 
-### 3. Wireframe Description
+### 3. Mô tả Wireframe
 
 ```text
 +-------------+--------------------------------------------------+
-| Device list | Role | IP | Connection | Online | Average Ping  |
-|             +-------------------------+------------------------+
-| selectable  | Text chat               | Speed chart            |
-| devices     |                         +------------------------+
-|             | File transfer           | Voice/video call       |
+| Danh sách   | Vai trò | IP | Kết nối | Trực tuyến | Ping Tb      |
+| thiết bị    +-------------------------+------------------------+
+|             | Trò chuyện văn bản      | Biểu đồ tốc độ         |
+| chọn được   |                         +------------------------+
+|             | Truyền tải tệp tin      | Cuộc gọi thoại/video   |
 |             +--------------------------------------------------+
-|             | Realtime event log                                |
+|             | Nhật ký sự kiện thời gian thực                  |
 +-------------+--------------------------------------------------+
 ```
 
-### 4. Design System
+### 4. Hệ thống Thiết kế (Design System)
 
-- Background: deep charcoal `#081018`.
-- Panels: graphite `#101923`, `#13202c`, `#182737`.
-- Borders: blue-gray `#1d2b38` / `#263747`.
-- Primary accent: cyan `#22d3ee`.
-- Secondary accent: violet `#8b5cf6`.
-- Success/online: green `#35d07f`.
-- Warning: amber `#f7b955`.
-- Error/offline: red `#ff6577`.
-- Radius: 9px for controls, 12-14px for cards and panels.
-- Motion: 140-160ms hover, focus, progress, and selection transitions.
+- Nền chính (Background): Màu than tối `#081018`.
+- Phân vùng (Panels): Màu than chì `#101923`, `#13202c`, `#182737`.
+- Đường viền (Borders): Xám xanh `#1d2b38` / `#263747`.
+- Màu nhấn chính (Primary accent): Màu xanh lục lam (Cyan) `#22d3ee`.
+- Màu nhấn phụ (Secondary accent): Màu tím (Violet) `#8b5cf6`.
+- Thành công/Trực tuyến: Màu xanh lá cây `#35d07f`.
+- Cảnh báo (Warning): Màu hổ phách `#f7b955`.
+- Lỗi/Ngoại tuyến: Màu đỏ `#ff6577`.
+- Bo góc (Radius): 9px cho các điều khiển, 12-14px cho thẻ (cards) và bảng điều khiển (panels).
+- Hiệu ứng chuyển động (Motion): 140-160ms cho rê chuột (hover), lấy nét (focus), tiến trình và hiệu ứng lựa chọn.
 
-### 5. Component List
+### 5. Danh sách Thành phần (Components)
 
-- App shell, sidebar, top status bar, panel header, device card, role chip, status dot, button, icon button, chat bubble, file picker, transfer item, progress bar, chart panel, video tile, call controls, log row.
+- Vỏ ứng dụng (App shell), thanh bên, thanh trạng thái trên cùng, tiêu đề phân vùng, thẻ thiết bị, nhãn vai trò, chấm trạng thái, nút nhấn, nút biểu tượng, bong bóng chat, bộ chọn tệp, mục tiến trình truyền tải, thanh tiến trình, phân vùng biểu đồ, ô hiển thị video, các nút điều khiển cuộc gọi, dòng log nhật ký.
 
-### 6. Color Palette
+### 6. Bảng màu (Color Palette)
 
-- Background: `#081018`.
-- Surface: `#101923`.
-- Raised surface: `#13202c`.
-- Input/card surface: `#182737`.
-- Text: `#eef7ff`.
-- Muted text: `#8ea2b4`.
-- Accent: `#22d3ee`.
-- Violet role accent: `#8b5cf6`.
-- Green online/success: `#35d07f`.
-- Amber warning: `#f7b955`.
-- Red offline/error: `#ff6577`.
+- Nền chính: `#081018`.
+- Bề mặt (Surface): `#101923`.
+- Bề mặt nổi (Raised surface): `#13202c`.
+- Bề mặt thẻ/input: `#182737`.
+- Màu chữ chính: `#eef7ff`.
+- Chữ mờ: `#8ea2b4`.
+- Màu nhấn: `#22d3ee`.
+- Màu vai trò nhấn tím: `#8b5cf6`.
+- Màu xanh trực tuyến/thành công: `#35d07f`.
+- Màu hổ phách cảnh báo: `#f7b955`.
+- Màu đỏ ngoại tuyến/lỗi: `#ff6577`.
 
-### 7. Typography
+### 7. Typography (Phông chữ)
 
-- Font stack: Inter-like system sans stack.
-- App title: 21px, 800-900 weight.
-- Panel title: 15px, 800 weight.
-- Body/control text: 13-14px, 700-800 weight for controls.
-- Labels: 11-12px uppercase, high weight, muted color.
-- Logs: 12px monospace.
+- Bộ phông chữ: Nhóm phông chữ không chân (sans-serif) hệ thống tương tự Inter.
+- Tiêu đề ứng dụng: 21px, độ đậm 800-900.
+- Tiêu đề phân vùng: 15px, độ đậm 800.
+- Chữ phần thân/điều khiển: 13-14px, độ đậm 700-800 cho các điều khiển.
+- Nhãn (Labels): 11-12px chữ in hoa, độ đậm lớn, màu chữ mờ.
+- Nhật ký log: 12px monospace (phông chữ đơn cách).
 
-### 8. Spacing Rules
+### 8. Quy tắc Khoảng cách (Spacing)
 
-- Base spacing scale: 4px.
-- App gutter: 10-14px.
-- Panel padding: 14-16px.
-- Component gaps: 10-14px.
-- Device/transfer row padding: 9-12px.
+- Tỷ lệ khoảng cách cơ sở: 4px.
+- Khoảng cách lề ứng dụng: 10-14px.
+- Khoảng đệm phân vùng (Padding): 14-16px.
+- Khoảng cách giữa các thành phần (Gaps): 10-14px.
+- Khoảng đệm hàng thiết bị/truyền tải: 9-12px.
 
-### 9. Button States
+### 9. Trạng thái của Nút bấm
 
-- Primary: cyan gradient, dark text, subtle cyan shadow.
-- Secondary: dark raised surface with border.
-- Danger: red tinted surface and border.
-- Hover: slight upward movement and stronger border contrast.
-- Focus: cyan outline.
-- Disabled: reduced opacity and no transform.
+- Nút chính (Primary): Dải màu xanh lục lam, chữ tối, bóng mờ xanh nhạt.
+- Nút phụ (Secondary): Bề mặt nổi tối có đường viền.
+- Nút nguy hiểm (Danger): Bề mặt pha sắc đỏ và đường viền đỏ.
+- Rê chuột (Hover): Chuyển động nhẹ lên trên và tăng độ tương phản đường viền.
+- Lấy nét (Focus): Đường viền ngoài màu xanh lục lam.
+- Vô hiệu hóa (Disabled): Giảm độ mờ và không kích hoạt hiệu ứng chuyển động.
 
-### 10. Online/Offline Status Styles
+### 10. Trạng thái Trực tuyến/Ngoại tuyến
 
-- Online: green dot with soft green halo, full opacity, selectable.
-- Offline: red dot with soft red halo, muted opacity, not selectable.
-- Waiting/warning: amber status text.
-- Connected/success: green status text.
+- Trực tuyến (Online): Chấm tròn xanh lá cây kèm hiệu ứng hào quang tỏa nhẹ, hiển thị đầy đủ, chọn được.
+- Ngoại tuyến (Offline): Chấm tròn đỏ kèm hào quang đỏ mờ, độ mờ tăng, không chọn được.
+- Đang chờ/Cảnh báo: Chữ trạng thái màu hổ phách.
+- Đã kết nối/Thành công: Chữ trạng thái màu xanh lá cây.
 
-### 11. Card Components
+### 11. Các thẻ Thành phần (Card Components)
 
-- Cards use dark raised surfaces, 12px radius, subtle border, no nested-card visual clutter.
-- Selected cards use cyan border and a soft cyan inset glow.
-- Offline cards stay visible but are visually muted.
+- Các thẻ sử dụng bề mặt nổi tối, bo góc 12px, đường viền mảnh tinh tế, không gây rối mắt bởi nhiều thẻ lồng nhau.
+- Thẻ được chọn sử dụng đường viền xanh lục lam và hiệu ứng tỏa sáng xanh nhẹ vào bên trong (glow).
+- Thẻ thiết bị ngoại tuyến vẫn hiển thị nhưng được làm mờ đi.
 
-### 12. Device List Item Design
+### 12. Thiết kế Mục danh sách Thiết bị
 
-- Top row: green/red status dot, device name, host/client role chip.
-- Middle rows: LAN IP and unique device ID.
-- Bottom row: RTT and connected duration.
-- Click selects or deselects online remote devices.
+- Hàng trên cùng: Chấm trạng thái xanh/đỏ, tên thiết bị, nhãn vai trò Máy chủ/Máy khách.
+- Các hàng giữa: IP mạng LAN và ID thiết bị duy nhất.
+- Hàng dưới cùng: Ping RTT và thời gian kết nối.
+- Nhấp chọn để thiết lập hoặc hủy thiết lập đích truyền tải tới thiết bị trực tuyến đó.
 
-### 13. Chat Bubble Design
+### 13. Thiết kế Bong bóng Trò chuyện
 
-- Sent messages align right with cyan-tinted background.
-- Received messages align left with neutral dark background.
-- Metadata shows sender, receiver target list, and timestamp.
-- Message content is escaped before rendering.
+- Tin nhắn đã gửi căn phải, nền màu pha sắc xanh lục lam.
+- Tin nhắn nhận được căn trái, nền màu tối trung tính.
+- Thông tin đi kèm: tên người gửi, danh sách thiết bị nhận và mốc thời gian.
+- Nội dung tin nhắn được mã hóa thực thể HTML (escaped) trước khi hiển thị để bảo mật.
 
-### 14. File Transfer Item Design
+### 14. Thiết kế Mục Truyền tải Tệp tin
 
-- Header: file name and status chip.
-- Body: progress track with cyan-to-green fill.
-- Footer: receiver name, percentage, current Mbps, and average Mbps.
+- Tiêu đề: tên tệp và nhãn trạng thái.
+- Phần thân: thanh tiến trình truyền tải với dải màu chuyển từ xanh lục lam sang xanh lá.
+- Phần chân: tên thiết bị nhận, phần trăm tiến trình, tốc độ truyền tải Mbps hiện tại và trung bình.
 
-### 15. Progress Bar Design
+### 15. Thiết kế Thanh tiến trình (Progress Bar)
 
-- Track: dark blue-gray.
-- Fill: cyan-to-green gradient.
-- Updates smoothly without changing row height.
-- Each receiver gets its own progress row.
+- Đường chạy nền: Màu xám xanh tối.
+- Thanh tiến trình: Dải màu chuyển tiếp từ xanh lục lam sang xanh lá cây.
+- Cập nhật tiến trình mượt mà không làm thay đổi chiều cao của hàng.
+- Mỗi thiết bị nhận tệp sẽ có một hàng tiến trình riêng biệt.
 
-### 16. Realtime Log Panel Design
+### 16. Thiết kế Phân vùng Nhật ký Thời gian thực
 
-- Scrollable bottom panel with newest item first.
-- Monospace timestamp.
-- Type label uses semantic color: info, success, warning, error.
-- Keeps the latest 160 log rows.
+- Bảng nhật ký cuộn được đặt ở dưới cùng với các log mới nhất hiển thị dưới cùng.
+- Mốc thời gian đơn cách (monospace).
+- Nhãn loại log sử dụng màu sắc tương ứng: info (xanh dương), success (xanh lá), warning (hổ phách), error (đỏ).
+- Lưu giữ tối đa 160 dòng nhật ký mới nhất.
 
-### 17. Video/Voice Call Panel Design
+### 17. Thiết kế Khung Gọi thoại/Video
 
-- Remote stream is the main tile.
-- Local preview sits as an overlay in the lower-right corner.
-- Controls include Start, End, microphone toggle, and webcam toggle.
-- Call status dot switches between idle/offline and active/online.
+- Luồng camera của đối tác là khung lớn chính.
+- Khung xem trước camera cục bộ hiển thị nhỏ ở góc dưới bên phải.
+- Nút điều khiển gồm: Bắt đầu gọi, Kết thúc gọi, Bật/tắt micrô và Bật/tắt camera.
+- Chấm trạng thái cuộc gọi chuyển đổi giữa rảnh/ngoại tuyến và đang hoạt động/kết nối.
 
-### 18. Chart Panel Design
+### 18. Thiết kế Phân vùng Biểu đồ
 
-- Chart.js line chart integrated into the right rail.
-- X-axis: time.
-- Y-axis: Mbps.
-- Cyan line, translucent fill, dark grid lines, no bulky legend.
-- Updates every second from active transfer telemetry.
+- Biểu đồ đường (line chart) của Chart.js tích hợp ở cột bên phải.
+- Trục X: thời gian.
+- Trục Y: tốc độ Mbps.
+- Đường vẽ màu xanh lục lam, phần tô nền mờ phía dưới, lưới đồ thị màu tối, loại bỏ chú giải thừa.
+- Cập nhật tự động mỗi giây dựa trên dữ liệu đo tốc độ truyền tải thực tế.
 
-## Architecture
+## Kiến trúc Ứng dụng
 
 ```text
 src/main.js
-  Electron main process
-  Local Socket.IO server
-  Manual peer IP connection
-  Socket.IO client for the selected peer
-  Ping RTT loop
-  Message relay
-  Chunked file transfer relay and receive-to-Downloads
-  WebRTC signaling relay
+  Tiến trình chính của Electron (Main process)
+  Khởi tạo máy chủ HTTP/Socket.IO nội bộ
+  Quản lý kết nối thủ công IP đối tác
+  Client kết nối Socket.IO tới thiết bị đối tác được chọn
+  Vòng lặp ping kiểm tra RTT
+  Điều phối và lưu trữ tin nhắn chat
+  Điều phối truyền tệp phân đoạn và lưu tệp vào thư mục Downloads
+  Truyền tín hiệu signaling cho WebRTC
 
 src/preload.js
-  Secure IPC bridge between renderer and Electron main
+  Cầu nối IPC bảo mật giữa tiến trình giao diện (renderer) và tiến trình chính (main)
 
 src/renderer/
   index.html
   styles.css
   renderer.js
-  Dashboard UI, target selection, chat, transfer progress,
-  Chart.js speed chart, WebRTC media controls, event log
+  Giao diện Dashboard, chọn thiết bị đích, chat, thanh tiến trình truyền tải,
+  biểu đồ tốc độ Chart.js, kiểm soát thiết bị WebRTC, nhật ký sự kiện
 ```
 
-## Folder Structure
+## Cấu trúc Thư mục
 
 ```text
 LANLink/
@@ -192,58 +192,58 @@ LANLink/
       renderer.js
 ```
 
-## Install
+## Cài đặt
 
-Install dependencies while you have Internet access:
+Cài đặt các thư viện cần thiết khi máy tính của bạn có kết nối Internet:
 
 ```bash
 npm install
 ```
 
-After dependencies are installed, the LAN demo does not require Internet access.
+Sau khi cài đặt xong các thư viện phụ thuộc, quá trình sử dụng LANLink không yêu cầu kết nối Internet.
 
-## Run
+## Chạy Ứng dụng
 
 ```bash
 npm start
 ```
 
-Run the same command on each computer in the same LAN.
+Chạy lệnh tương tự trên máy tính thứ hai trong cùng mạng LAN.
 
-## Test With Two Computers
+## Thử nghiệm giữa hai máy tính
 
-1. Connect both computers to the same Wi-Fi or Ethernet LAN.
-2. Run `npm start` on both computers.
-3. On each app, choose the correct local LAN IP from the `Local IP` dropdown if the computer has multiple adapters.
-4. On one computer, enter the other computer's LAN IP in `Peer IP`, then click `Connect`.
-5. Wait until the peer appears online in `Paired Devices`. The app auto-selects the single online peer.
-6. Send a text message.
-7. Pick a file and send it. Progress and Mbps should update per transfer.
-8. Select the online peer and click `Start call` to test voice/video.
-9. If the connection looks stale after changing Wi-Fi/Ethernet, choose the correct local IP again, enter the peer IP, and click `Connect` again.
+1. Kết nối cả hai máy tính vào cùng một mạng Wi-Fi hoặc mạng LAN Ethernet.
+2. Chạy `npm start` trên cả hai máy tính.
+3. Trên mỗi ứng dụng, chọn đúng IP LAN cục bộ tương ứng từ danh sách hiển thị mạng nếu máy tính có nhiều card mạng hoạt động.
+4. Trên một máy tính, nhập IP LAN của máy tính kia vào ô `Kết nối IP thủ công`, rồi nhấn nút `Thêm/Kết nối`.
+5. Đợi thiết bị xuất hiện trực tuyến trong danh sách `Thiết bị lân cận`. Ứng dụng sẽ tự động chọn thiết bị trực tuyến đó làm đích.
+6. Gửi một tin nhắn văn bản để kiểm tra.
+7. Chọn một tệp tin bất kỳ và nhấn `Truyền dữ liệu`. Tiến trình truyền tải và tốc độ Mbps sẽ được hiển thị thực tế.
+8. Chọn thiết bị đang trực tuyến và nhấn nút `Gọi thiết bị` ở bảng gọi để bắt đầu cuộc gọi thoại/video.
+9. Nếu kết nối bị gián đoạn sau khi thay đổi mạng Wi-Fi/Ethernet, vui lòng chọn lại IP cục bộ hoạt động chính xác, nhập IP đối tác và bấm kết nối lại.
 
-Received files are saved to:
+Các tệp tin nhận được sẽ được lưu tự động vào thư mục:
 
 ```text
 Downloads/LANLinkReceived/
 ```
 
-## Firewall and LAN Troubleshooting
+## Khắc phục Sự cố Tường lửa và mạng LAN
 
-- Allow Node.js or Electron through the firewall on every computer.
-- Make sure all computers are on the same subnet, for example `192.168.1.x`.
-- Disable VPNs during the demo if they change routing or block LAN traffic.
-- Use a private/home network profile on Windows, not a public network profile.
-- Confirm TCP `32150` is not blocked. This port is used for Socket.IO communication.
-- For the most stable demo, use only two computers and connect by `Peer IP`.
-- If a device does not appear after changing Wi-Fi/Ethernet, choose the correct local IP and connect to the peer IP again.
-- If webcam or microphone does not work, check OS privacy permissions for Electron/Terminal.
-- If WebRTC video does not connect, test text chat first. WebRTC signaling uses the Socket.IO host, so chat must work before calls can work.
+- Cấp quyền cho ứng dụng Node.js hoặc Electron đi qua Tường lửa (Firewall) trên mỗi máy tính.
+- Đảm bảo tất cả máy tính đều thuộc cùng một phân mạng con (subnet), ví dụ: `192.168.1.x`.
+- Tắt các kết nối VPN trong quá trình trình diễn vì chúng làm thay đổi định tuyến mạng LAN hoặc chặn luồng dữ liệu nội bộ.
+- Thiết lập hồ sơ mạng trên Windows là Private/Home, không để Public network.
+- Xác nhận cổng TCP `32150` không bị chặn. Cổng này được sử dụng cho liên lạc phối hợp Socket.IO.
+- Để buổi trình diễn ổn định nhất, hãy dùng hai máy tính và ghép nối trực tiếp thông qua nhập `IP cục bộ`.
+- Nếu thiết bị không xuất hiện sau khi đổi mạng Wi-Fi/Ethernet, hãy chọn lại IP cục bộ hoạt động đúng trên ứng dụng và thực hiện kết nối lại.
+- Nếu camera hoặc micrô không hoạt động, hãy kiểm tra quyền riêng tư của hệ điều hành dành cho ứng dụng Electron hoặc ứng dụng Terminal chạy nó.
+- Nếu cuộc gọi WebRTC không thể kết nối, hãy kiểm tra tính năng gửi tin nhắn chat trước. Tiến trình kết nối WebRTC yêu cầu phối hợp qua Socket.IO, do đó kết nối chat văn bản phải thông suốt trước khi thực hiện gọi thoại/video.
 
-## Notes
+## Ghi chú thêm
 
-- The app is optimized for one stable two-device pair.
-- Ping RTT updates every 3 seconds and is smoothed to avoid flickering.
-- File speed uses `Mbps = transferred bits / elapsed time / 1,000,000`.
-- WebRTC is implemented for stable 1-to-1 calls first.
-- The app prioritizes reliability and demonstration clarity over complex production networking edge cases.
+- Ứng dụng được tối ưu hóa tốt nhất cho một cặp kết nối 2 thiết bị ổn định.
+- Tốc độ Ping RTT cập nhật mỗi 3 giây và được làm mượt để tránh dao động nhảy số liên tục.
+- Tốc độ tệp tin được tính theo công thức: `Mbps = số bit đã truyền / thời gian đã trôi qua / 1,000,000`.
+- WebRTC được thiết lập cho cuộc gọi 1-đối-1 trực tiếp và ổn định.
+- Ứng dụng ưu tiên tính ổn định, tin cậy và sự rõ ràng của buổi trình diễn thực tế hơn là xử lý các trường hợp mạng phân tán phức tạp.

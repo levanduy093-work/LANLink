@@ -104,7 +104,7 @@ const els = {
 boot();
 
 async function boot() {
-  addLog('info', 'Booting LANLink UI engine...');
+  addLog('info', 'Đang khởi động giao diện truyền dẫn quang PON...');
   
   try {
     // 1. Get local device info
@@ -148,16 +148,16 @@ async function boot() {
       refreshInterfaces();
     }, 5000);
 
-    addLog('success', 'LANLink engine booted successfully. Ready to transmit.');
+    addLog('success', 'Khởi động hệ thống truyền dẫn quang PON thành công. Sẵn sàng truyền tải.');
   } catch (err) {
-    addLog('error', `Initialization failed: ${err.message}`);
+    addLog('error', `Khởi tạo thất bại: ${err.message}`);
   }
 }
 
 function updateLocalDeviceCard() {
   if (state.me) {
     els.localDeviceAlias.textContent = state.me.name;
-    els.localDeviceDetails.textContent = `${state.me.deviceModel || 'Desktop'} • IP: ${state.me.ip || '127.0.0.1'} • Port ${state.me.port}`;
+    els.localDeviceDetails.textContent = `${state.me.deviceModel || 'Máy tính'} • IP: ${state.me.ip || '127.0.0.1'} • Cổng ${state.me.port}`;
   }
 }
 
@@ -181,7 +181,7 @@ async function refreshInterfaces(force = false) {
     els.interfaceCount.textContent = state.interfaces.length;
 
     if (state.interfaces.length === 0) {
-      els.localIpList.innerHTML = '<div class="empty-state-text">No active subnets found</div>';
+      els.localIpList.innerHTML = '<div class="empty-state-text">Không tìm thấy mạng con hoạt động nào</div>';
       return;
     }
 
@@ -202,28 +202,28 @@ async function refreshInterfaces(force = false) {
     els.localIpList.querySelectorAll('.local-ip-item').forEach(el => {
       el.addEventListener('click', async () => {
         const ip = el.dataset.ip;
-        addLog('info', `Clicked IP interface: ${ip}`);
+        addLog('info', `Đã nhấp giao diện IP: ${ip}`);
         if (ip === state.me.ip) return; // Already active
 
         try {
           const newIp = await window.lanlink.setActiveIp(ip);
           state.me.ip = newIp;
-          addLog('info', `Active IP interface switched to: ${newIp}`);
+          addLog('info', `Đã chuyển giao diện IP hoạt động sang: ${newIp}`);
           refreshInterfaces(true);
           
           // Automatically trigger network discovery sweep on the new active interface
-          addLog('info', `Initiating device sweep on interface ${newIp}...`);
+          addLog('info', `Đang khởi chạy quét thiết bị trên giao diện ${newIp}...`);
           window.lanlink.rescan().catch(err => {
-            addLog('error', `Sweep on switch failed: ${err.message}`);
+            addLog('error', `Quét thiết bị khi chuyển đổi thất bại: ${err.message}`);
           });
         } catch (e) {
-          addLog('error', `Failed to switch active IP: ${e.message}`);
+          addLog('error', `Chuyển đổi IP hoạt động thất bại: ${e.message}`);
         }
       });
     });
 
   } catch (e) {
-    addLog('error', `Failed to fetch network interfaces: ${e.message}`);
+    addLog('error', `Lấy danh sách giao diện mạng thất bại: ${e.message}`);
   }
 }
 
@@ -287,7 +287,7 @@ function bindEvents() {
       });
       els.textMessageInput.value = '';
     } catch (err) {
-      addLog('error', `Message send failed: ${err.message}`);
+      addLog('error', `Gửi tin nhắn thất bại: ${err.message}`);
     } finally {
       els.textMessageInput.disabled = false;
       els.sendMsgBtn.disabled = false;
@@ -302,13 +302,13 @@ function bindEvents() {
     if (!ip) return;
 
     els.peerConnectBtn.disabled = true;
-    addLog('info', `Manually probing peer at ${ip}...`);
+    addLog('info', `Đang kiểm tra thiết bị thủ công tại ${ip}...`);
 
     try {
       await window.lanlink.connectPeer(ip);
       els.peerIpInput.value = '';
     } catch (err) {
-      addLog('error', `Manual connect to ${ip} failed: ${err.message}`);
+      addLog('error', `Kết kết thủ công tới ${ip} thất bại: ${err.message}`);
     } finally {
       els.peerConnectBtn.disabled = false;
     }
@@ -319,36 +319,36 @@ function bindEvents() {
     const inputVal = els.peerIpInput.value.trim();
     if (!inputVal) {
       els.scanSubnetBtn.disabled = true;
-      addLog('info', 'No custom subnet prefix specified. Re-scanning current active subnet...');
-      els.radarStatusText.textContent = 'Sweeping active subnet...';
+      addLog('info', 'Chưa chỉ định tiền tố mạng con tùy chỉnh. Đang quét lại mạng con hoạt động hiện tại...');
+      els.radarStatusText.textContent = 'Đang quét mạng con hoạt động...';
 
       try {
         await window.lanlink.rescan();
-        addLog('success', 'Active subnet scan completed.');
+        addLog('success', 'Quét mạng con hoạt động hoàn tất.');
       } catch (err) {
-        addLog('error', `Active subnet scan failed: ${err.message}`);
+        addLog('error', `Quét mạng con hoạt động thất bại: ${err.message}`);
       } finally {
         els.scanSubnetBtn.disabled = false;
-        els.radarStatusText.textContent = 'Broadcasting announcements...';
+        els.radarStatusText.textContent = 'Đang phát thông tin thông báo...';
       }
       return;
     }
 
     const match = inputVal.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})/);
     if (!match) {
-      addLog('error', 'Invalid IP or subnet prefix format. Use e.g. 192.168.1.15');
+      addLog('error', 'Định dạng IP hoặc tiền tố mạng con không hợp lệ. Ví dụ: 192.168.1.15');
       return;
     }
 
     const prefix = match[1];
     els.scanSubnetBtn.disabled = true;
-    addLog('info', `Triggering manual sweep for subnet ${prefix}.x...`);
+    addLog('info', `Đang chạy quét thủ công mạng con ${prefix}.x...`);
 
     try {
       await window.lanlink.scanCustomSubnet(prefix);
-      addLog('success', `Manual subnet sweep for ${prefix}.x completed.`);
+      addLog('success', `Quét thủ công mạng con ${prefix}.x hoàn tất.`);
     } catch (err) {
-      addLog('error', `Manual subnet sweep failed: ${err.message}`);
+      addLog('error', `Quét thủ công mạng con thất bại: ${err.message}`);
     } finally {
       els.scanSubnetBtn.disabled = false;
     }
@@ -357,17 +357,17 @@ function bindEvents() {
   // Rescan / Scan network button
   els.rescanBtn.addEventListener('click', async () => {
     els.rescanBtn.disabled = true;
-    addLog('info', 'Triggering active LAN sweep (UDP Multicast + TCP scan)...');
-    els.radarStatusText.textContent = 'Sweeping subnet ranges...';
+    addLog('info', 'Đang quét mạng LAN hoạt động (UDP Multicast + TCP scan)...');
+    els.radarStatusText.textContent = 'Đang quét dải mạng con...';
     
     try {
       await window.lanlink.rescan();
     } catch (err) {
-      addLog('error', `Network sweep failed: ${err.message}`);
+      addLog('error', `Quét mạng thất bại: ${err.message}`);
     } finally {
       setTimeout(() => {
         els.rescanBtn.disabled = false;
-        els.radarStatusText.textContent = 'Broadcasting announcements...';
+        els.radarStatusText.textContent = 'Đang phát thông tin thông báo...';
       }, 2000);
     }
   });
@@ -516,7 +516,7 @@ function registerIpcListeners() {
     
     const isSent = msg.sender.id === state.me.id;
     if (!isSent) {
-      addLog('success', `Message from ${msg.sender.alias}: "${msg.text}"`);
+      addLog('success', `Tin nhắn từ ${msg.sender.alias}: "${msg.text}"`);
     }
   });
 
@@ -534,7 +534,7 @@ function registerIpcListeners() {
 
   // Automatically refresh when backend notices network interface changes
   window.lanlink.onInterfaceChanged(() => {
-    addLog('info', 'Hardware network interface change detected. Re-syncing active subnet...');
+    addLog('info', 'Phát hiện thay đổi phần cứng giao diện mạng. Đang đồng bộ lại mạng con hoạt động...');
     refreshInterfaces();
   });
 }
@@ -580,7 +580,7 @@ async function pickFile() {
       selectLocalFile(file);
     }
   } catch (err) {
-    addLog('error', `Failed to open file picker: ${err.message}`);
+    addLog('error', `Mở hộp thoại chọn tệp thất bại: ${err.message}`);
   }
 }
 
@@ -632,7 +632,7 @@ function updateTransmitButtonState() {
       els.selectedTargetBadge.classList.remove('empty');
     }
   } else {
-    els.selectedTargetBadge.textContent = 'No device selected';
+    els.selectedTargetBadge.textContent = 'Chưa chọn thiết bị';
     els.selectedTargetBadge.classList.add('empty');
   }
 
@@ -643,13 +643,13 @@ function updateTransmitButtonState() {
       els.startCallBtn.disabled = false;
       els.startCallBtn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        <span>Call ${escapeHtml(peer.alias)}</span>
+        <span>Gọi ${escapeHtml(peer.alias)}</span>
       `;
     } else {
       els.startCallBtn.disabled = true;
       els.startCallBtn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        <span>Call Peer</span>
+        <span>Gọi thiết bị</span>
       `;
     }
   } else {
@@ -657,7 +657,7 @@ function updateTransmitButtonState() {
     if (state.callState === 'idle') {
       els.startCallBtn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        <span>Call Peer</span>
+        <span>Gọi thiết bị</span>
       `;
     }
   }
@@ -669,27 +669,27 @@ async function transmitData() {
   
   const peer = state.devices.find(d => d.id === state.selectedPeerId);
   if (!peer) {
-    addLog('error', 'Selected peer went offline or is invalid');
+    addLog('error', 'Thiết bị được chọn đã ngoại tuyến hoặc không hợp lệ');
     return;
   }
 
   els.transmitBtn.disabled = true;
 
   const file = state.selectedFile;
-  addLog('info', `Requesting transmission for: ${file.name} to ${peer.alias}...`);
+  addLog('info', `Đang yêu cầu truyền tải tệp: ${file.name} tới ${peer.alias}...`);
   try {
     await window.lanlink.sendFile({
       path: file.path,
       targets: [peer.id]
     });
-    addLog('success', `Finished sending ${file.name} to ${peer.alias}`);
+    addLog('success', `Đã gửi xong tệp ${file.name} tới ${peer.alias}`);
     
     // Clear file selection
     state.selectedFile = null;
     els.selectedFileCard.style.display = 'none';
     els.fileDropzone.style.display = 'flex';
   } catch (err) {
-    addLog('error', `Transmission failed: ${err.message}`);
+    addLog('error', `Truyền tải thất bại: ${err.message}`);
   }
 
   updateTransmitButtonState();
@@ -701,15 +701,15 @@ async function acceptIncomingInvite() {
   const sessionId = state.currentInvite.sessionId;
   
   els.incomingInviteModal.classList.remove('open');
-  addLog('info', `Accepting incoming file invitation...`);
+  addLog('info', `Đang chấp nhận lời mời nhận tệp đến...`);
 
   try {
     const result = await window.lanlink.acceptInvite(sessionId);
     if (!result.ok) {
-      addLog('error', `Accept invite failed: ${result.error}`);
+      addLog('error', `Chấp nhận lời mời thất bại: ${result.error}`);
     }
   } catch (err) {
-    addLog('error', `Failed to accept invite: ${err.message}`);
+    addLog('error', `Chấp nhận lời mời thất bại: ${err.message}`);
   } finally {
     state.currentInvite = null;
   }
@@ -720,12 +720,12 @@ async function declineIncomingInvite() {
   const sessionId = state.currentInvite.sessionId;
   
   els.incomingInviteModal.classList.remove('open');
-  addLog('warning', `Declining incoming file invitation...`);
+  addLog('warning', `Đang từ chối lời mời nhận tệp đến...`);
 
   try {
     await window.lanlink.declineInvite(sessionId);
   } catch (err) {
-    addLog('error', `Failed to decline invite: ${err.message}`);
+    addLog('error', `Từ chối lời mời thất bại: ${err.message}`);
   } finally {
     state.currentInvite = null;
   }
@@ -774,12 +774,12 @@ function renderPeersGrid() {
 // Render Chat Conversation history
 function renderChatMessages() {
   if (!state.selectedPeerId) {
-    els.chatMessages.innerHTML = `<div class="empty-state-text">Select a device to start chatting</div>`;
+    els.chatMessages.innerHTML = `<div class="empty-state-text">Chọn một thiết bị để bắt đầu trò chuyện</div>`;
     return;
   }
 
   const selectedPeer = state.devices.find(d => d.id === state.selectedPeerId);
-  const peerName = selectedPeer ? selectedPeer.alias : 'Peer';
+  const peerName = selectedPeer ? selectedPeer.alias : 'Thiết bị đối tác';
 
   // Filter messages exchanged with selected peer
   const conversation = state.chatHistory.filter(msg => {
@@ -789,7 +789,7 @@ function renderChatMessages() {
   });
 
   if (conversation.length === 0) {
-    els.chatMessages.innerHTML = `<div class="empty-state-text"><p>No messages yet with <strong>${escapeHtml(peerName)}</strong>.</p><p>Send a message to start conversation!</p></div>`;
+    els.chatMessages.innerHTML = `<div class="empty-state-text"><p>Chưa có tin nhắn nào với <strong>${escapeHtml(peerName)}</strong>.</p><p>Gửi tin nhắn để bắt đầu cuộc trò chuyện!</p></div>`;
     return;
   }
 
@@ -816,12 +816,12 @@ function renderTransmissions() {
   const activeCount = list.filter(t => t.status === 'sending' || t.status === 'receiving').length;
 
   if (activeCount > 0) {
-    els.activeTransmissionsBadge.textContent = `${activeCount} active`;
+    els.activeTransmissionsBadge.textContent = `${activeCount} đang chạy`;
     els.activeTransmissionsBadge.style.color = 'var(--accent-cyan)';
     els.activeTransmissionsBadge.style.borderColor = 'rgba(34, 211, 238, 0.3)';
     els.activeTransmissionsBadge.style.background = 'rgba(34, 211, 238, 0.08)';
   } else {
-    els.activeTransmissionsBadge.textContent = 'Idle';
+    els.activeTransmissionsBadge.textContent = 'Đang rảnh';
     els.activeTransmissionsBadge.style.color = 'var(--text-faint)';
     els.activeTransmissionsBadge.style.borderColor = 'rgba(255, 255, 255, 0.08)';
     els.activeTransmissionsBadge.style.background = 'rgba(255, 255, 255, 0.02)';
@@ -830,7 +830,7 @@ function renderTransmissions() {
   if (list.length === 0) {
     els.transferList.innerHTML = `
       <div class="empty-state">
-        <p class="muted">No active transfers</p>
+        <p class="muted">Không có tiến trình truyền tải nào</p>
       </div>
     `;
     return;
@@ -847,10 +847,10 @@ function renderTransmissions() {
       
       actionsHtml = `
         <div class="transfer-actions">
-          <button class="btn-icon-action" onclick="togglePauseTransfer(event, '${item.transferId}')" title="${isPaused ? 'Resume' : 'Pause'}">
+          <button class="btn-icon-action" onclick="togglePauseTransfer(event, '${item.transferId}')" title="${isPaused ? 'Tiếp tục' : 'Tạm dừng'}">
             ${pauseIcon}
           </button>
-          <button class="btn-icon-action cancel" onclick="cancelTransfer(event, '${item.transferId}')" title="Cancel">
+          <button class="btn-icon-action cancel" onclick="cancelTransfer(event, '${item.transferId}')" title="Hủy">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -858,7 +858,7 @@ function renderTransmissions() {
     } else {
       actionsHtml = `
         <div class="transfer-actions">
-          <button class="btn-icon-action delete" onclick="deleteTransfer(event, '${item.transferId}')" title="Remove from list">
+          <button class="btn-icon-action delete" onclick="deleteTransfer(event, '${item.transferId}')" title="Xóa khỏi danh sách">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
           </button>
         </div>
@@ -873,12 +873,21 @@ function renderTransmissions() {
       etaText = ` • ~${formatDuration(etaSeconds * 1000)}`;
     }
 
+    const statusMap = {
+      sending: 'Đang gửi',
+      receiving: 'Đang nhận',
+      paused: 'Đã tạm dừng',
+      completed: 'Hoàn thành',
+      failed: 'Thất bại',
+      canceled: 'Đã hủy'
+    };
+
     return `
       <div class="transfer-card" onclick="openSpeedChartModal('${item.transferId}')" style="cursor: pointer;">
         <div class="transfer-card-header">
           <span class="transfer-filename" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
           ${actionsHtml}
-          <span class="transfer-status-tag ${item.status}">${escapeHtml(item.status)}</span>
+          <span class="transfer-status-tag ${item.status}">${escapeHtml(statusMap[item.status] || item.status)}</span>
         </div>
         <div class="transfer-progress-track">
           <div class="transfer-progress-fill" style="width: ${item.progress}%"></div>
@@ -947,7 +956,7 @@ function formatDuration(ms) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   if (minutes > 0) {
-    return `${minutes}m ${seconds}s`;
+    return `${minutes}ph ${seconds}s`;
   }
   return `${seconds}s`;
 }
@@ -1034,8 +1043,15 @@ function updateActiveChart(item) {
 
   const subtitleEl = document.getElementById('chartModalSubtitle');
   if (subtitleEl) {
-    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-    const statusText = capitalize(item.status === 'sending' ? 'sending' : (item.status === 'receiving' ? 'receiving' : (item.status === 'paused' ? 'paused' : item.status)));
+    const statusMap = {
+      sending: 'Đang gửi',
+      receiving: 'Đang nhận',
+      paused: 'Đã tạm dừng',
+      completed: 'Hoàn thành',
+      failed: 'Thất bại',
+      canceled: 'Đã hủy'
+    };
+    const statusText = statusMap[item.status] || item.status;
     const durationText = item.durationMs !== undefined ? ` • ${formatDuration(item.durationMs)}` : '';
     subtitleEl.innerHTML = `${statusText} • ${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)} • ${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${durationText}`;
   }
@@ -1058,7 +1074,7 @@ function updateModalButtons(item) {
     els.modalCancelBtn.style.display = 'inline-block';
     els.modalDeleteBtn.style.display = 'none';
 
-    els.modalPauseBtn.textContent = item.status === 'paused' ? 'Resume' : 'Pause';
+    els.modalPauseBtn.textContent = item.status === 'paused' ? 'Tiếp tục' : 'Tạm dừng';
     
     // Set up click handlers dynamically for the modal buttons
     els.modalPauseBtn.onclick = (e) => window.togglePauseTransfer(e, item.transferId);
@@ -1083,10 +1099,10 @@ window.togglePauseTransfer = async function(event, transferId) {
   try {
     const result = await window.lanlink.togglePauseTransfer(transferId);
     if (!result.ok) {
-      addLog('error', `Failed to pause/resume: ${result.error}`);
+      addLog('error', `Tạm dừng/tiếp tục thất bại: ${result.error}`);
     }
   } catch (err) {
-    addLog('error', `Pause/Resume failed: ${err.message}`);
+    addLog('error', `Tạm dừng/tiếp tục thất bại: ${err.message}`);
   }
 };
 
@@ -1095,10 +1111,10 @@ window.cancelTransfer = async function(event, transferId) {
   try {
     const result = await window.lanlink.cancelTransfer(transferId);
     if (!result.ok) {
-      addLog('error', `Failed to cancel transfer: ${result.error}`);
+      addLog('error', `Hủy truyền tải thất bại: ${result.error}`);
     }
   } catch (err) {
-    addLog('error', `Cancel transfer failed: ${err.message}`);
+    addLog('error', `Hủy truyền tải thất bại: ${err.message}`);
   }
 };
 
@@ -1119,11 +1135,11 @@ async function getMediaStream() {
   try {
     return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
   } catch (videoError) {
-    addLog('warning', `Camera not available, falling back to audio-only: ${videoError.message}`);
+    addLog('warning', `Camera không khả dụng, chuyển sang chế độ chỉ âm thanh: ${videoError.message}`);
     try {
       return await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
     } catch (audioError) {
-      addLog('error', `Microphone not available: ${audioError.message}`);
+      addLog('error', `Micrô không khả dụng: ${audioError.message}`);
       throw audioError;
     }
   }
@@ -1135,11 +1151,11 @@ async function startCall() {
   const targetId = state.selectedPeerId;
   const peer = state.devices.find(d => d.id === targetId);
   if (!peer) {
-    addLog('error', 'Selected peer is no longer online.');
+    addLog('error', 'Thiết bị đối tác đã chọn không còn trực tuyến.');
     return;
   }
 
-  addLog('info', `Calling ${peer.alias}...`);
+  addLog('info', `Đang gọi ${peer.alias}...`);
   state.callState = 'calling';
   state.callPeerId = targetId;
   updateCallUI();
@@ -1177,7 +1193,7 @@ async function startCall() {
     });
 
   } catch (err) {
-    addLog('error', `Failed to start call: ${err.message}`);
+    addLog('error', `Bắt đầu cuộc gọi thất bại: ${err.message}`);
     resetCallState();
   }
 }
@@ -1197,21 +1213,21 @@ function setupPeerConnection(targetId) {
   // ICE Candidate handler
   state.peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
-      addLog('info', `Gathered local ICE candidate: ${event.candidate.candidate.slice(0, 30)}...`);
+      addLog('info', `Đã thu thập ICE candidate cục bộ: ${event.candidate.candidate.slice(0, 30)}...`);
       window.lanlink.sendSignal({
         signal: { type: 'candidate', candidate: event.candidate.toJSON() },
         targetId
       }).then(() => {
-        addLog('info', 'Sent ICE candidate to peer.');
+        addLog('info', 'Đã gửi ICE candidate tới thiết bị.');
       }).catch(err => {
-        addLog('error', `Failed to send ICE candidate: ${err.message}`);
+        addLog('error', `Gửi ICE candidate thất bại: ${err.message}`);
       });
     }
   };
 
   // Remote track received handler
   state.peerConnection.ontrack = (event) => {
-    addLog('success', `Remote media track received: ${event.track.kind}`);
+    addLog('success', `Đã nhận luồng truyền thông đối tác: ${event.track.kind}`);
     if (event.streams && event.streams[0]) {
       if (els.remoteVideo.srcObject !== event.streams[0]) {
         els.remoteVideo.srcObject = event.streams[0];
@@ -1226,7 +1242,7 @@ function setupPeerConnection(targetId) {
 
   state.peerConnection.oniceconnectionstatechange = () => {
     const iceState = state.peerConnection.iceConnectionState;
-    addLog('info', `ICE Connection State: ${iceState}`);
+    addLog('info', `Trạng thái kết nối ICE: ${iceState}`);
     if (iceState === 'disconnected' || iceState === 'failed') {
       hangUpCall();
     }
@@ -1234,7 +1250,7 @@ function setupPeerConnection(targetId) {
 
   state.peerConnection.onconnectionstatechange = () => {
     const connState = state.peerConnection.connectionState;
-    addLog('info', `Peer Connection State: ${connState}`);
+    addLog('info', `Trạng thái kết nối thiết bị: ${connState}`);
     if (connState === 'failed') {
       hangUpCall();
     }
@@ -1250,7 +1266,7 @@ async function acceptCall() {
   els.incomingCallModal.classList.remove('open');
 
   const { sender, offer } = state.incomingCallPayload;
-  addLog('success', `Call accepted from ${sender.alias}`);
+  addLog('success', `Chấp nhận cuộc gọi từ ${sender.alias}`);
   
   state.callState = 'connected';
   state.callPeerId = sender.id;
@@ -1293,7 +1309,7 @@ async function acceptCall() {
     });
 
   } catch (err) {
-    addLog('error', `Failed to accept call: ${err.message}`);
+    addLog('error', `Chấp nhận cuộc gọi thất bại: ${err.message}`);
     // Notify peer of failure
     window.lanlink.sendCallEvent({ event: 'decline', targetId: sender.id }).catch(() => {});
     resetCallState();
@@ -1305,7 +1321,7 @@ async function declineCall() {
   els.incomingCallModal.classList.remove('open');
   
   const { sender } = state.incomingCallPayload;
-  addLog('info', `Call from ${sender.alias} declined.`);
+  addLog('info', `Cuộc gọi từ ${sender.alias} đã bị từ chối.`);
   
   try {
     await window.lanlink.sendCallEvent({
@@ -1321,7 +1337,7 @@ async function declineCall() {
 
 async function hangUpCall() {
   if (state.callState === 'idle') return;
-  addLog('info', 'Ending video call...');
+  addLog('info', 'Đang kết thúc cuộc gọi video...');
 
   if (state.callPeerId) {
     try {
@@ -1371,13 +1387,13 @@ async function drainIceCandidates() {
   if (!state.peerConnection || !state.peerConnection.remoteDescription || !state.peerConnection.remoteDescription.type) return;
   const candidates = [...state.iceCandidateBuffer];
   state.iceCandidateBuffer = [];
-  addLog('info', `Draining ${candidates.length} buffered remote ICE candidates...`);
+  addLog('info', `Đang xử lý ${candidates.length} ICE candidate đã đệm...`);
   for (const candidate of candidates) {
     try {
       await state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-      addLog('info', 'Added buffered remote ICE candidate.');
+      addLog('info', 'Đã thêm ICE candidate đối tác đã đệm.');
     } catch (e) {
-      addLog('error', `Error adding buffered remote ICE candidate: ${e.message}`);
+      addLog('error', `Lỗi thêm ICE candidate đối tác đã đệm: ${e.message}`);
     }
   }
 }
@@ -1403,7 +1419,7 @@ function updateCallUI() {
     els.callActiveActions.style.display = 'flex';
     
     if (state.callState === 'calling') {
-      els.callPlaceholderText.textContent = "Ringing peer...";
+      els.callPlaceholderText.textContent = "Đang đổ chuông thiết bị đối tác...";
     }
   } else {
     // idle
@@ -1414,7 +1430,7 @@ function updateCallUI() {
     els.startCallBtn.style.display = 'inline-flex';
     els.callActiveActions.style.display = 'none';
     
-    els.callPlaceholderText.textContent = "Ready to start LAN call";
+    els.callPlaceholderText.textContent = "Sẵn sàng bắt đầu cuộc gọi LAN";
   }
 
   // Reset mic/cam icons
@@ -1431,7 +1447,7 @@ function toggleMicrophone() {
     state.isMicEnabled = !state.isMicEnabled;
     audioTrack.enabled = state.isMicEnabled;
     els.micIcon.style.color = state.isMicEnabled ? 'inherit' : 'var(--status-red)';
-    addLog('info', state.isMicEnabled ? 'Microphone enabled' : 'Microphone muted');
+    addLog('info', state.isMicEnabled ? 'Đã bật micrô' : 'Đã tắt micrô');
   }
 }
 
@@ -1443,7 +1459,7 @@ function toggleCamera() {
     videoTrack.enabled = state.isCamEnabled;
     els.camIcon.style.color = state.isCamEnabled ? 'inherit' : 'var(--status-red)';
     els.localVideo.style.display = state.isCamEnabled ? 'block' : 'none';
-    addLog('info', state.isCamEnabled ? 'Camera enabled' : 'Camera disabled');
+    addLog('info', state.isCamEnabled ? 'Đã bật camera' : 'Đã tắt camera');
   }
 }
 
@@ -1458,31 +1474,31 @@ async function handleCallEvent(event, sender, extra) {
     state.incomingCallPayload = { sender, offer: extra.offer };
     els.incomingCallSenderName.textContent = sender.alias;
     els.incomingCallModal.classList.add('open');
-    addLog('warning', `Incoming video call invite from ${sender.alias}`);
+    addLog('warning', `Cuộc gọi video đến từ ${sender.alias}`);
     updateCallUI();
   } 
   else if (event === 'accept') {
     if (state.callState === 'calling' && state.peerConnection) {
-      addLog('success', `${sender.alias} accepted the call.`);
+      addLog('success', `${sender.alias} đã chấp nhận cuộc gọi.`);
       state.callState = 'connected';
       updateCallUI();
       try {
         await state.peerConnection.setRemoteDescription(new RTCSessionDescription(extra.answer));
         await drainIceCandidates();
       } catch (err) {
-        addLog('error', `Failed to set remote description: ${err.message}`);
+        addLog('error', `Lỗi thiết lập mô tả đối tác: ${err.message}`);
         hangUpCall();
       }
     }
   } 
   else if (event === 'decline') {
     if (state.callState === 'calling' || state.callState === 'ringing') {
-      addLog('warning', `Call declined by ${sender.alias}`);
+      addLog('warning', `Cuộc gọi bị từ chối bởi ${sender.alias}`);
       resetCallState();
     }
   } 
   else if (event === 'hangup') {
-    addLog('info', `${sender.alias} ended the call.`);
+    addLog('info', `${sender.alias} đã kết thúc cuộc gọi.`);
     resetCallState();
   }
 }
@@ -1495,13 +1511,13 @@ async function handleSignaling(signal, senderId) {
     if (state.peerConnection && state.peerConnection.remoteDescription && state.peerConnection.remoteDescription.type) {
       try {
         await state.peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
-        addLog('info', 'Added remote ICE candidate.');
+        addLog('info', 'Đã thêm ICE candidate đối tác.');
       } catch (err) {
-        addLog('error', `Failed to add remote ICE candidate: ${err.message}`);
+        addLog('error', `Lỗi thêm ICE candidate đối tác: ${err.message}`);
       }
     } else {
       state.iceCandidateBuffer.push(signal.candidate);
-      addLog('info', 'Buffered remote ICE candidate.');
+      addLog('info', 'Đã đệm ICE candidate đối tác.');
     }
   }
 }

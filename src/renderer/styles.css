@@ -73,6 +73,10 @@ body {
   overflow: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap);
+  gap: var(--gap);
 }
 
 /* Custom Scrollbar styling */
@@ -109,8 +113,8 @@ body {
   display: grid;
   grid-template-columns: 310px 1fr 380px;
   gap: var(--gap);
-  height: 100vh;
-  padding: var(--gap);
+  flex: 1;
+  min-height: 0;
   min-width: 1200px;
 }
 
@@ -1552,3 +1556,187 @@ p, .muted {
   background: rgba(239, 68, 68, 0.35) !important;
   border-color: rgba(239, 68, 68, 0.6) !important;
 }
+
+/* ----------------------------------------------------
+   APP HEADER
+---------------------------------------------------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 28px;
+  gap: 36px;
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.header-logo-img {
+  height: 110px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.3));
+  border-radius: 12px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-logo-img:hover {
+  transform: scale(1.04);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-main-text {
+  font-family: var(--font-sans);
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+}
+
+.logo-sub-text {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+.header-center-divider {
+  width: 2px;
+  height: 110px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-grow: 1;
+  min-width: 0;
+  align-items: center;
+  text-align: center;
+}
+
+.project-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.info-label {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+.project-title {
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.people-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.people-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.people-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.role-badge {
+  font-size: 14px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.svth-badge {
+  background: rgba(34, 211, 238, 0.1);
+  border: 2px solid rgba(34, 211, 238, 0.2);
+  color: var(--accent-cyan);
+}
+
+.gvhd-badge {
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  color: var(--accent-violet);
+}
+
+.students-list {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 20px;
+  flex-wrap: wrap;
+}
+
+.student-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.student-name {
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.student-id {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.student-separator {
+  color: var(--text-faint);
+  font-size: 14px;
+}
+
+.teacher-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
