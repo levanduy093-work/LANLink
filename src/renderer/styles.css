@@ -1740,3 +1740,19 @@ p, .muted {
   white-space: nowrap;
 }
 
+/* --- Ping Diagnostics Modal Styling --- */
+#pingConsole::-webkit-scrollbar {
+  width: 6px;
+}
+#pingConsole::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+#pingConsole::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+#pingConsole::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+

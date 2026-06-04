@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { spawn } = require('child_process');
 app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns');
 const path = require('path');
 const os = require('os');
@@ -1649,6 +1650,104 @@ ipcMain.handle('lan:connect-peer', async (_event, ip) => {
   log('info', `Đang kiểm tra thiết bị thủ công tại ${peerIp}...`);
   await checkPeerRegistration(peerIp);
   return { ok: true, ip: peerIp };
+});
+
+ipcMain.handle('lan:ping-peer', async (_event, ip) => {
+  const peerIp = String(ip || '').trim();
+  if (!isValidIpv4(peerIp)) throw new Error('Địa chỉ IP không hợp lệ');
+
+  const isWin = os.platform() === 'win32';
+  // Use ping -c 4 on non-windows, ping -n 4 on windows
+  const pingArgs = isWin ? ['-n', '4', peerIp] : ['-c', '4', peerIp];
+  const pingProc = spawn('ping', pingArgs);
+
+  const rtts = [];
+  
+  // Helper to send lines to the window
+  const sendPingLine = (line) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('lan:ping-line', line);
+    }
+  };
+
+  let buffer = '';
+  
+  pingProc.stdout.on('data', (data) => {
+    buffer += data.toString();
+    const lines = buffer.split(/\r?\n/);
+    buffer = lines.pop(); // Keep the incomplete line in buffer
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      sendPingLine(line);
+
+      // Parse RTT from reply line
+      // e.g. "64 bytes from 192.168.1.76: icmp_seq=0 ttl=64 time=1.234 ms"
+      // or "Reply from 192.168.1.76: bytes=32 time=2ms TTL=64"
+      // or "Reply from 192.168.1.76: bytes=32 time<1ms TTL=64"
+      if (/from|Reply/i.test(line) && /time[=<]\s*([0-9.]+)/i.test(line)) {
+        const match = line.match(/time[=<]\s*([0-9.]+)/i);
+        if (match) {
+          const rtt = parseFloat(match[1]);
+          rtts.push(rtt);
+        }
+      }
+    }
+  });
+
+  pingProc.stderr.on('data', (data) => {
+    const lines = data.toString().split(/\r?\n/);
+    for (const line of lines) {
+      if (line.trim()) {
+        sendPingLine(`ERROR: ${line}`);
+      }
+    }
+  });
+
+  return new Promise((resolve) => {
+    pingProc.on('close', (code) => {
+      // Process remaining buffer
+      if (buffer.trim()) {
+        sendPingLine(buffer);
+        if (/from|Reply/i.test(buffer) && /time[=<]\s*([0-9.]+)/i.test(buffer)) {
+          const match = buffer.match(/time[=<]\s*([0-9.]+)/i);
+          if (match) {
+            rtts.push(parseFloat(match[1]));
+          }
+        }
+      }
+
+      const sent = 4;
+      const received = rtts.length;
+      const lost = sent - received;
+      const lossPercent = Math.round((lost / sent) * 100);
+
+      let min = 0, max = 0, avg = 0;
+      if (received > 0) {
+        min = Math.min(...rtts);
+        max = Math.max(...rtts);
+        const sum = rtts.reduce((a, b) => a + b, 0);
+        avg = Math.round((sum / received) * 10) / 10;
+      }
+
+      const stats = {
+        sent,
+        received,
+        lost,
+        lossPercent,
+        rtts,
+        min: Math.round(min * 10) / 10,
+        max: Math.round(max * 10) / 10,
+        avg
+      };
+
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('lan:ping-done', stats);
+      }
+
+      resolve(stats);
+    });
+  });
 });
 
 function isValidIpv4(ip) {

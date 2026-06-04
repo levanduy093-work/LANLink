@@ -97,7 +97,25 @@ const els = {
   incomingCallModal: document.getElementById('incomingCallModal'),
   incomingCallSenderName: document.getElementById('incomingCallSenderName'),
   declineCallBtn: document.getElementById('declineCallBtn'),
-  acceptCallBtn: document.getElementById('acceptCallBtn')
+  acceptCallBtn: document.getElementById('acceptCallBtn'),
+
+  // Ping Diagnostics Modal DOMs
+  pingDeviceBtn: document.getElementById('pingDeviceBtn'),
+  pingModal: document.getElementById('pingModal'),
+  pingModalSubtitle: document.getElementById('pingModalSubtitle'),
+  pingConsole: document.getElementById('pingConsole'),
+  pingProgressBar: document.getElementById('pingProgressBar'),
+  pingSummary: document.getElementById('pingSummary'),
+  pingSentCount: document.getElementById('pingSentCount'),
+  pingRecvCount: document.getElementById('pingRecvCount'),
+  pingLostCount: document.getElementById('pingLostCount'),
+  pingLossPercent: document.getElementById('pingLossPercent'),
+  pingMinRtt: document.getElementById('pingMinRtt'),
+  pingMaxRtt: document.getElementById('pingMaxRtt'),
+  pingAvgRtt: document.getElementById('pingAvgRtt'),
+  pingSpeedRating: document.getElementById('pingSpeedRating'),
+  pingRetryBtn: document.getElementById('pingRetryBtn'),
+  pingCloseBtn: document.getElementById('pingCloseBtn')
 };
 
 // --- Boot & Initialization ---
@@ -401,6 +419,30 @@ function bindEvents() {
   // Call Modal buttons
   els.acceptCallBtn.addEventListener('click', acceptCall);
   els.declineCallBtn.addEventListener('click', declineCall);
+
+  // Ping Diagnostics Listeners
+  els.pingDeviceBtn.addEventListener('click', () => {
+    const peer = state.devices.find(d => d.id === state.selectedPeerId);
+    if (peer && peer.ip) {
+      startManualPing(peer.ip);
+    }
+  });
+
+  els.pingRetryBtn.addEventListener('click', () => {
+    if (currentPingIp) {
+      startManualPing(currentPingIp);
+    }
+  });
+
+  els.pingCloseBtn.addEventListener('click', () => {
+    els.pingModal.classList.remove('open');
+  });
+
+  els.pingModal.addEventListener('click', (e) => {
+    if (e.target === els.pingModal && !els.pingCloseBtn.disabled) {
+      els.pingModal.classList.remove('open');
+    }
+  });
 }
 
 // --- IPC Event Listeners from Main Process ---
@@ -537,6 +579,15 @@ function registerIpcListeners() {
     addLog('info', 'Phát hiện thay đổi phần cứng giao diện mạng. Đang đồng bộ lại mạng con hoạt động...');
     refreshInterfaces();
   });
+
+  // Ping IPC listeners
+  window.lanlink.onPingLine((line) => {
+    addPingConsoleLine(line);
+  });
+
+  window.lanlink.onPingDone((stats) => {
+    handlePingDone(stats);
+  });
 }
 
 // --- UI Actions & Helper Functions ---
@@ -636,7 +687,7 @@ function updateTransmitButtonState() {
     els.selectedTargetBadge.classList.add('empty');
   }
 
-  // Update Call button state
+  // Update Call & Ping button state
   if (peerSelected && state.callState === 'idle') {
     const peer = state.devices.find(d => d.id === state.selectedPeerId);
     if (peer && peer.status === 'online') {
@@ -645,19 +696,34 @@ function updateTransmitButtonState() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         <span>Gọi ${escapeHtml(peer.alias)}</span>
       `;
+      els.pingDeviceBtn.disabled = false;
+      els.pingDeviceBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+        <span>Đo tốc độ (Ping)</span>
+      `;
     } else {
       els.startCallBtn.disabled = true;
       els.startCallBtn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         <span>Gọi thiết bị</span>
       `;
+      els.pingDeviceBtn.disabled = true;
+      els.pingDeviceBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+        <span>Đo tốc độ (Ping)</span>
+      `;
     }
   } else {
     els.startCallBtn.disabled = true;
+    els.pingDeviceBtn.disabled = true;
     if (state.callState === 'idle') {
       els.startCallBtn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         <span>Gọi thiết bị</span>
+      `;
+      els.pingDeviceBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+        <span>Đo tốc độ (Ping)</span>
       `;
     }
   }
@@ -1520,4 +1586,122 @@ async function handleSignaling(signal, senderId) {
       addLog('info', 'Đã đệm ICE candidate đối tác.');
     }
   }
+}
+
+// --- Manual Ping Diagnostics ---
+let currentPingIp = null;
+let pingSequenceCount = 0;
+
+function startManualPing(ip) {
+  if (!ip) return;
+  currentPingIp = ip;
+  pingSequenceCount = 0;
+
+  // Open modal & Reset UI state
+  els.pingModal.classList.add('open');
+  els.pingModalSubtitle.textContent = `Đang khởi tạo kết nối tới ${ip}...`;
+  els.pingConsole.innerHTML = `<div style="color: var(--accent-cyan); font-weight: 500;">$ ping ${ip} -c 4</div>`;
+  els.pingProgressBar.style.width = '0%';
+  els.pingSummary.style.display = 'none';
+  els.pingRetryBtn.style.display = 'none';
+  els.pingCloseBtn.disabled = true;
+
+  addLog('info', `Đang chạy đo kiểm độ trễ thủ công tới IP: ${ip}...`);
+
+  window.lanlink.pingPeer(ip).catch(err => {
+    addPingConsoleLine(`ERROR: Lỗi khởi chạy ping: ${err.message}`);
+    els.pingModalSubtitle.textContent = `Đo kiểm thất bại`;
+    els.pingCloseBtn.disabled = false;
+    els.pingRetryBtn.style.display = 'inline-flex';
+    addLog('error', `Đo kiểm độ trễ tới ${ip} thất bại.`);
+  });
+}
+
+function addPingConsoleLine(line) {
+  const lineEl = document.createElement('div');
+  lineEl.textContent = line;
+  
+  if (/timeout|fail|error/i.test(line)) {
+    lineEl.style.color = '#ff3b30'; // red
+  } else if (/from|Reply/i.test(line)) {
+    lineEl.style.color = '#4cd964'; // green
+    
+    // Progress increment (4 packets total)
+    pingSequenceCount = Math.min(4, pingSequenceCount + 1);
+    els.pingProgressBar.style.width = `${(pingSequenceCount / 4) * 100}%`;
+  }
+  
+  els.pingConsole.appendChild(lineEl);
+  els.pingConsole.scrollTop = els.pingConsole.scrollHeight;
+}
+
+function handlePingDone(stats) {
+  els.pingProgressBar.style.width = '100%';
+  els.pingModalSubtitle.textContent = `Đo kiểm hoàn tất.`;
+  els.pingCloseBtn.disabled = false;
+  els.pingRetryBtn.style.display = 'inline-flex';
+
+  // Fill summary stats
+  els.pingSentCount.textContent = stats.sent;
+  els.pingRecvCount.textContent = stats.received;
+  els.pingLostCount.textContent = stats.lost;
+  els.pingLossPercent.textContent = `${stats.lossPercent}%`;
+
+  if (stats.received > 0) {
+    els.pingMinRtt.textContent = stats.min;
+    els.pingMaxRtt.textContent = stats.max;
+    els.pingAvgRtt.textContent = stats.avg;
+
+    const ratingEl = els.pingSpeedRating;
+    
+    if (stats.lossPercent > 50) {
+      ratingEl.style.background = 'rgba(255, 59, 48, 0.1)';
+      ratingEl.style.color = '#ff3b30';
+      ratingEl.style.border = '1px solid rgba(255, 59, 48, 0.2)';
+      ratingEl.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Kết nối không ổn định (Mất gói cao: ${stats.lossPercent}%)</span>
+      `;
+    } else if (stats.avg < 10) {
+      ratingEl.style.background = 'rgba(76, 217, 100, 0.1)';
+      ratingEl.style.color = '#4cd964';
+      ratingEl.style.border = '1px solid rgba(76, 217, 100, 0.2)';
+      ratingEl.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Đường truyền cực tốt (Độ trễ thấp, kết nối tối ưu)</span>
+      `;
+    } else if (stats.avg < 50) {
+      ratingEl.style.background = 'rgba(0, 191, 255, 0.1)';
+      ratingEl.style.color = 'var(--accent-cyan)';
+      ratingEl.style.border = '1px solid rgba(0, 191, 255, 0.2)';
+      ratingEl.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Đường truyền bình thường (Thích hợp để truyền tải)</span>
+      `;
+    } else {
+      ratingEl.style.background = 'rgba(255, 149, 0, 0.1)';
+      ratingEl.style.color = '#ff9500';
+      ratingEl.style.border = '1px solid rgba(255, 149, 0, 0.2)';
+      ratingEl.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Độ trễ tương đối cao (${stats.avg} ms) - Tốc độ có thể bị giới hạn</span>
+      `;
+    }
+  } else {
+    els.pingMinRtt.textContent = '-';
+    els.pingMaxRtt.textContent = '-';
+    els.pingAvgRtt.textContent = '-';
+
+    const ratingEl = els.pingSpeedRating;
+    ratingEl.style.background = 'rgba(255, 59, 48, 0.1)';
+    ratingEl.style.color = '#ff3b30';
+    ratingEl.style.border = '1px solid rgba(255, 59, 48, 0.2)';
+    ratingEl.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <span>Mất kết nối hoàn toàn (Mất gói 100%). Vui lòng kiểm tra lại cáp/mạng.</span>
+    `;
+  }
+
+  els.pingSummary.style.display = 'block';
+  addLog('success', `Đo kiểm tới ${currentPingIp} hoàn tất. Avg RTT: ${stats.avg}ms, Loss: ${stats.lossPercent}%`);
 }

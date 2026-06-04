@@ -22,11 +22,12 @@ node -c src/preload.js
 
 # 4. Build cho macOS (Universal: x64 + arm64)
 echo "🍏 Đang build cho macOS (dmg, zip)..."
+export CSC_IDENTITY_AUTO_DISCOVERY=false
 npx electron-builder --mac --x64 --arm64
 
-# 5. Build cho Windows (x64, arm64)
+# 5. Build cho Windows (x64)
 echo "🪟 Đang build cho Windows (nsis installer, zip)..."
-npx electron-builder --win --x64 --arm64
+npx electron-builder --win --x64
 
 echo "============================================="
 echo "🎉 Quá trình build hoàn tất thành công!"
