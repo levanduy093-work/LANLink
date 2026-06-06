@@ -1766,7 +1766,7 @@ async function createWindow() {
     height: 900,
     minWidth: 1180,
     minHeight: 720,
-    backgroundColor: '#081018',
+    backgroundColor: '#f5f7fa',
     title: 'Hệ thống truyền dẫn quang PON',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

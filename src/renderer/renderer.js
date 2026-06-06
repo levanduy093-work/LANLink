@@ -25,6 +25,9 @@ const state = {
 
 // --- DOM Cache ---
 const els = {
+  headerLogo: document.getElementById('headerLogo'),
+  themeToggleLight: document.getElementById('themeToggleLight'),
+  themeToggleDark: document.getElementById('themeToggleDark'),
   localDeviceAlias: document.getElementById('localDeviceAlias'),
   localDeviceDetails: document.getElementById('localDeviceDetails'),
   localIpList: document.getElementById('localIpList'),
@@ -121,7 +124,39 @@ const els = {
 // --- Boot & Initialization ---
 boot();
 
+function applyTheme(theme) {
+  state.theme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('lanlink-theme', theme);
+  
+  if (els.themeToggleLight && els.themeToggleDark) {
+    if (theme === 'light') {
+      els.themeToggleLight.classList.add('active');
+      els.themeToggleDark.classList.remove('active');
+    } else {
+      els.themeToggleLight.classList.remove('active');
+      els.themeToggleDark.classList.add('active');
+    }
+  }
+
+  if (els.headerLogo) {
+    if (theme === 'light') {
+      els.headerLogo.src = './Logo_color.png';
+    } else {
+      els.headerLogo.src = './logo.png';
+    }
+  }
+
+  // Redraw chart if active to apply new theme colors
+  if (state.activeChartSessionId && state.speedChartInstance) {
+    window.openSpeedChartModal(state.activeChartSessionId);
+  }
+}
+
 async function boot() {
+  const savedTheme = localStorage.getItem('lanlink-theme') || 'light';
+  applyTheme(savedTheme);
+
   addLog('info', 'Đang khởi động giao diện truyền dẫn quang PON...');
 
   try {
@@ -247,6 +282,14 @@ async function refreshInterfaces(force = false) {
 
 // --- Bind DOM Events ---
 function bindEvents() {
+  // Theme Switching
+  if (els.themeToggleLight) {
+    els.themeToggleLight.addEventListener('click', () => applyTheme('light'));
+  }
+  if (els.themeToggleDark) {
+    els.themeToggleDark.addEventListener('click', () => applyTheme('dark'));
+  }
+
   // Tab Switching
   els.tabFilesBtn.addEventListener('click', () => switchTab('files'));
   els.tabTextBtn.addEventListener('click', () => switchTab('text'));
@@ -263,12 +306,12 @@ function bindEvents() {
   });
 
   els.fileDropzone.addEventListener('dragleave', () => {
-    els.fileDropzone.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+    els.fileDropzone.style.borderColor = 'var(--btn-secondary-border)';
   });
 
   els.fileDropzone.addEventListener('drop', (e) => {
     e.preventDefault();
-    els.fileDropzone.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+    els.fileDropzone.style.borderColor = 'var(--btn-secondary-border)';
 
     const file = e.dataTransfer.files[0];
     if (file) {
@@ -884,13 +927,13 @@ function renderTransmissions() {
   if (activeCount > 0) {
     els.activeTransmissionsBadge.textContent = `${activeCount} đang chạy`;
     els.activeTransmissionsBadge.style.color = 'var(--accent-cyan)';
-    els.activeTransmissionsBadge.style.borderColor = 'rgba(34, 211, 238, 0.3)';
-    els.activeTransmissionsBadge.style.background = 'rgba(34, 211, 238, 0.08)';
+    els.activeTransmissionsBadge.style.borderColor = 'var(--panel-border-glow)';
+    els.activeTransmissionsBadge.style.background = 'var(--accent-cyan-faint)';
   } else {
     els.activeTransmissionsBadge.textContent = 'Đang rảnh';
     els.activeTransmissionsBadge.style.color = 'var(--text-faint)';
-    els.activeTransmissionsBadge.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-    els.activeTransmissionsBadge.style.background = 'rgba(255, 255, 255, 0.02)';
+    els.activeTransmissionsBadge.style.borderColor = 'var(--btn-secondary-border)';
+    els.activeTransmissionsBadge.style.background = 'var(--btn-secondary-bg)';
   }
 
   if (list.length === 0) {
@@ -1054,6 +1097,10 @@ window.openSpeedChartModal = function (transferId) {
     state.speedChartInstance.destroy();
   }
 
+  const isLight = state.theme === 'light';
+  const tickColor = isLight ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.4)';
+  const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+
   // Draw chart
   state.speedChartInstance = new Chart(ctx, {
     type: 'line',
@@ -1080,12 +1127,12 @@ window.openSpeedChartModal = function (transferId) {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { color: 'rgba(255, 255, 255, 0.4)', font: { size: 9 } }
+          ticks: { color: tickColor, font: { size: 9 } }
         },
         y: {
           min: 0,
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: 'rgba(255, 255, 255, 0.4)', font: { size: 9 } }
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { size: 9 } }
         }
       }
     }
@@ -1471,14 +1518,14 @@ function updateCallUI() {
   els.callStatusBadge.className = 'badge';
   if (state.callState === 'connected') {
     els.callStatusBadge.style.color = 'var(--status-green)';
-    els.callStatusBadge.style.borderColor = 'rgba(53, 208, 127, 0.2)';
+    els.callStatusBadge.style.borderColor = 'var(--status-green-border)';
     els.callStatusBadge.style.background = 'var(--status-green-faint)';
 
     els.startCallBtn.style.display = 'none';
     els.callActiveActions.style.display = 'flex';
   } else if (state.callState === 'calling' || state.callState === 'ringing') {
     els.callStatusBadge.style.color = 'var(--status-amber)';
-    els.callStatusBadge.style.borderColor = 'rgba(247, 185, 85, 0.2)';
+    els.callStatusBadge.style.borderColor = 'var(--status-amber-border)';
     els.callStatusBadge.style.background = 'var(--status-amber-faint)';
 
     els.startCallBtn.style.display = 'none';
@@ -1490,8 +1537,8 @@ function updateCallUI() {
   } else {
     // idle
     els.callStatusBadge.style.color = 'var(--text-faint)';
-    els.callStatusBadge.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-    els.callStatusBadge.style.background = 'rgba(255, 255, 255, 0.02)';
+    els.callStatusBadge.style.borderColor = 'var(--btn-secondary-border)';
+    els.callStatusBadge.style.background = 'var(--btn-secondary-bg)';
 
     els.startCallBtn.style.display = 'inline-flex';
     els.callActiveActions.style.display = 'none';
@@ -1622,9 +1669,9 @@ function addPingConsoleLine(line) {
   lineEl.textContent = line;
 
   if (/timeout|fail|error/i.test(line)) {
-    lineEl.style.color = '#ff3b30'; // red
+    lineEl.style.color = 'var(--status-red)';
   } else if (/from|Reply/i.test(line)) {
-    lineEl.style.color = '#4cd964'; // green
+    lineEl.style.color = 'var(--status-green)';
 
     // Progress increment (4 packets total)
     pingSequenceCount = Math.min(4, pingSequenceCount + 1);
@@ -1655,33 +1702,33 @@ function handlePingDone(stats) {
     const ratingEl = els.pingSpeedRating;
 
     if (stats.lossPercent > 50) {
-      ratingEl.style.background = 'rgba(255, 59, 48, 0.1)';
-      ratingEl.style.color = '#ff3b30';
-      ratingEl.style.border = '1px solid rgba(255, 59, 48, 0.2)';
+      ratingEl.style.background = 'var(--status-red-faint)';
+      ratingEl.style.color = 'var(--status-red)';
+      ratingEl.style.border = '1px solid var(--status-red-border)';
       ratingEl.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span>Kết nối không ổn định (Mất gói cao: ${stats.lossPercent}%)</span>
       `;
     } else if (stats.avg < 10) {
-      ratingEl.style.background = 'rgba(76, 217, 100, 0.1)';
-      ratingEl.style.color = '#4cd964';
-      ratingEl.style.border = '1px solid rgba(76, 217, 100, 0.2)';
+      ratingEl.style.background = 'var(--status-green-faint)';
+      ratingEl.style.color = 'var(--status-green)';
+      ratingEl.style.border = '1px solid var(--status-green-border)';
       ratingEl.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <span>Đường truyền cực tốt (Độ trễ thấp, kết nối tối ưu)</span>
       `;
     } else if (stats.avg < 50) {
-      ratingEl.style.background = 'rgba(0, 191, 255, 0.1)';
+      ratingEl.style.background = 'var(--accent-cyan-faint)';
       ratingEl.style.color = 'var(--accent-cyan)';
-      ratingEl.style.border = '1px solid rgba(0, 191, 255, 0.2)';
+      ratingEl.style.border = '1px solid var(--panel-border-glow)';
       ratingEl.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <span>Đường truyền bình thường (Thích hợp để truyền tải)</span>
       `;
     } else {
-      ratingEl.style.background = 'rgba(255, 149, 0, 0.1)';
-      ratingEl.style.color = '#ff9500';
-      ratingEl.style.border = '1px solid rgba(255, 149, 0, 0.2)';
+      ratingEl.style.background = 'var(--status-amber-faint)';
+      ratingEl.style.color = 'var(--status-amber)';
+      ratingEl.style.border = '1px solid var(--status-amber-border)';
       ratingEl.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <span>Độ trễ tương đối cao (${stats.avg} ms) - Tốc độ có thể bị giới hạn</span>
@@ -1693,9 +1740,9 @@ function handlePingDone(stats) {
     els.pingAvgRtt.textContent = '-';
 
     const ratingEl = els.pingSpeedRating;
-    ratingEl.style.background = 'rgba(255, 59, 48, 0.1)';
-    ratingEl.style.color = '#ff3b30';
-    ratingEl.style.border = '1px solid rgba(255, 59, 48, 0.2)';
+    ratingEl.style.background = 'var(--status-red-faint)';
+    ratingEl.style.color = 'var(--status-red)';
+    ratingEl.style.border = '1px solid var(--status-red-border)';
     ratingEl.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       <span>Mất kết nối hoàn toàn (Mất gói 100%). Vui lòng kiểm tra lại cáp/mạng.</span>

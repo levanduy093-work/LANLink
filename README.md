@@ -2,40 +2,29 @@
 
 Dự án này là một ứng dụng máy tính đa nền tảng (Desktop Application) được thiết kế và tối ưu hóa để trình diễn, truyền dẫn dữ liệu và giao tiếp nội bộ trong mạng LAN phục vụ đề tài nghiên cứu: **"THIẾT KẾ MÔ HÌNH HỆ THỐNG TRUYỀN DẪN QUANG PON ỨNG DỤNG TRONG PHÒNG THỰC HÀNH"**.
 
-Ứng dụng cho phép kết nối, nhắn tin thời gian thực, truyền tệp phân đoạn (chunked transfer) tốc độ cao, đo kiểm độ trễ đường truyền (Ping), hiển thị biểu đồ hiệu năng thời gian thực và hỗ trợ cuộc gọi thoại/video 1-đối-1 trực tiếp không cần Internet.
+Ứng dụng đóng vai trò là lớp phần mềm kiểm thử đường truyền (Software Validation Layer), giúp đo đạc hiệu năng thực tế (băng thông, độ trễ, độ ổn định) khi truyền tải dữ liệu qua mô hình cáp quang và các bộ chia quang thụ động (Optical Splitter) của hệ thống PON.
 
 ---
 
 ## 🛠️ Công nghệ Sử dụng (Technology Stack)
 
-Dự án được xây dựng dựa trên sự kết hợp giữa các công nghệ phần mềm hiện đại và các giao thức mạng tiêu chuẩn:
+Dự án sử dụng kiến trúc kết hợp giữa các thư viện hệ thống chạy trên nền Node.js và giao diện Web hiệu năng cao:
 
-1. **Khung ứng dụng (App Container):** 
-   - **Electron:** Đóng gói ứng dụng web thành ứng dụng desktop gốc chạy độc lập trên Windows, macOS và Linux.
-   - **Node.js:** Xử lý các tác vụ hệ thống ở backend (HTTP Server, UDP Socket, File I/O, Child Process, Database Access).
-
-2. **Giao diện người dùng (Frontend):**
-   - **HTML5 & CSS3 (Glassmorphism):** Thiết kế giao diện tối (Dark Mode) hiện đại, trực quan, sử dụng các biến CSS (CSS Variables) linh hoạt, hiệu ứng chuyển động mượt mà (transitions) phù hợp trình diễn trên các màn hình phòng thực hành.
-   - **Vanilla JavaScript:** Đảm nhiệm toàn bộ logic xử lý giao diện, cập nhật DOM thời gian thực và quản lý trạng thái ứng dụng.
-   - **Chart.js:** Vẽ biểu đồ hiệu năng, hiển thị tốc độ truyền dữ liệu thời gian thực theo thời gian thực (real-time telemetry).
-
-3. **Giao tiếp & Truyền dữ liệu (Network & Communication Stack):**
-   - **HTTP REST API:** Sử dụng để thực hiện bắt tay (handshake) và truyền tải dữ liệu tệp tin.
-   - **Socket.IO (WebSockets):** Thiết lập kết nối kênh đôi thời gian thực để gửi nhận tin nhắn chat và truyền tín hiệu (signaling) phục vụ cuộc gọi.
-   - **UDP Multicast:** Tự động phát sóng (broadcast) và phát hiện các thiết bị khác đang chạy ứng dụng trong cùng mạng LAN.
-
-4. **Kết nối thời gian thực (Real-time P2P):**
-   - **WebRTC (Web Real-Time Communication):** Thiết lập luồng truyền phát âm thanh/hình ảnh ngang hàng (P2P) trực tiếp giữa hai camera/micro mà không đi qua máy chủ trung gian.
-
-5. **Cơ sở dữ liệu (Database Persistence):**
-   - **SQLite3:** Lưu trữ cục bộ lịch sử trò chuyện (chat history) và nhật ký truyền tải tệp tin (transmission logs) trực tiếp trên máy của người dùng (`lanlink.db`).
-
-6. **Chẩn đoán mạng (Diagnostics):**
-   - **OS Ping Utility:** Tích hợp công cụ `ping` của hệ điều hành (macOS, Windows) thông qua module `child_process` của Node.js để gửi mặc định **4 gói tin** đo độ trễ khứ hồi (RTT) và tỷ lệ mất gói tin (packet loss).
+| Thành phần | Công nghệ / Thư viện | Vai trò trong hệ thống |
+| :--- | :--- | :--- |
+| **App Container** | Electron v42.3.2 | Đóng gói mã nguồn HTML/JS thành ứng dụng Desktop độc lập trên macOS, Windows và Linux. |
+| **Backend** | Node.js | Xử lý các tác vụ mức thấp (quét cổng, bắt tay HTTP, đọc/ghi file phân đoạn, tương tác SQLite). |
+| **Frontend UI** | HTML5, CSS3, Vanilla JavaScript | Thiết kế giao diện Glassmorphism trực quan, hỗ trợ chuyển đổi Light/Dark Theme mượt mà thông qua CSS Variables. |
+| **Đồ thị** | Chart.js v4.4.9 | Biểu diễn telemetry tốc độ truyền dẫn dữ liệu thời gian thực dạng sóng (line chart). |
+| **Cơ sở dữ liệu** | SQLite3 v5.1.7 | Lưu trữ lịch sử tin nhắn trò chuyện và nhật ký truyền tải tệp tin nội bộ (`lanlink.db`). |
+| **Giao tiếp Mạng** | Socket.IO v4.7.5 | Kết nối kênh truyền thông điệp song song (duplex), chuyển phát tín hiệu (signaling) cuộc gọi. |
+| **Quét thiết bị** | UDP Multicast | Phát sóng gói tin chứa IP và tên thiết bị lên dải mạng LAN để tự động phát hiện nhau. |
+| **Đo kiểm (Ping)** | OS Ping Utility | Gọi tiến trình ping mặc định của hệ điều hành qua `child_process` để thu thập tham số RTT và gói tin hao hụt. |
+| **Cuộc gọi** | WebRTC | Thiết lập luồng truyền phát âm thanh/hình ảnh P2P trực tiếp giữa hai trình duyệt/thiết bị mà không qua máy chủ. |
 
 ---
 
-## 📂 Kiến trúc Ứng dụng & Luồng Dữ liệu
+## 📂 Kiến trúc Ứng dụng & Cấu trúc Thư mục
 
 ```text
 src/main.js
@@ -51,10 +40,148 @@ src/preload.js
 
 src/renderer/
   ├── index.html   : Cấu trúc giao diện Dashboard, các bảng điều khiển và popup
-  ├── styles.css   : CSS variables, phong cách Glassmorphic tối và sơ đồ lưới (grid) responsive
-  └── renderer.js  : Tiến trình giao diện (Renderer Process) xử lý tương tác người dùng,
-                     biểu diễn đồ thị Chart.js, nhận luồng WebRTC và điều khiển gọi
+  ├── styles.css   : CSS variables, phong cách Glassmorphic và sơ đồ lưới (grid) hỗ trợ chuyển theme
+  ├── renderer.js  : Tiến trình giao diện (Renderer Process) xử lý tương tác người dùng,
+  │                  biểu diễn đồ thị Chart.js, nhận luồng WebRTC và điều khiển gọi
+  ├── logo.png     : Logo phiên bản sáng (phù hợp Dark Mode)
+  └── Logo_color.png: Logo phiên bản màu sắc gốc (phù hợp Light Mode)
 ```
+
+---
+
+## 📊 Lưu đồ Giải thuật (Flowcharts)
+
+### 1. Giải thuật Phát hiện Thiết bị tự động (Device Discovery)
+Hệ thống sử dụng cơ chế phát sóng UDP Multicast định kỳ để tự động nhận dạng các máy tính đang cài đặt và chạy LANLink trong cùng phân mạng.
+
+```mermaid
+graph TD
+    A([Khởi động ứng dụng]) --> B[Khởi tạo UDP Socket trên cổng 53317]
+    B --> C[Phát tin UDP Multicast chứa IP & Alias thiết bị]
+    B --> D[Lắng nghe gói tin UDP từ các IP khác trong mạng LAN]
+    D --> E{Nhận gói tin UDP?}
+    E -- Có --> F[Phân tích IP & Alias đối tác]
+    F --> G{Đã có trong danh sách?}
+    G -- Chưa --> H[Thêm vào danh sách thiết bị lân cận]
+    G -- Rồi --> I[Cập nhật trạng thái trực tuyến & cập nhật ping nền]
+    H --> J[Cập nhật giao diện UI hiển thị thiết bị]
+    I --> J
+    C --> K[Đợi 5 giây] --> C
+```
+
+---
+
+### 2. Luồng Giải thuật Truyền tải Tệp Phân đoạn (Chunked File Transfer)
+Để đảm bảo độ tin cậy và không gây tràn bộ nhớ khi gửi tệp tin dung lượng lớn qua kết nối cáp quang PON, ứng dụng thực hiện phân đoạn tệp thành các chunk dung lượng nhỏ và gửi qua HTTP Stream.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Người Gửi
+    actor Người Nhận
+    
+    Người Gửi->>Người Nhận: Yêu cầu truyền tệp (Gửi Metadata: Tên, kích thước, số lượng Chunks)
+    Note over Người Nhận: Hiển thị Popup xác nhận chấp nhận tệp
+    
+    alt Từ chối
+        Người Nhận-->>Người Gửi: Phản hồi từ chối nhận tệp
+        Note over Người Gửi: Cập nhật trạng thái "Đã bị hủy" trên UI
+    else Chấp nhận
+        Người Nhận-->>Người Gửi: Phản hồi chấp nhận nhận tệp
+        Note over Người Gửi: Đọc tệp tin gốc và cắt nhỏ thành các mảnh (Chunks)
+        
+        loop Cho mỗi Chunk (ví dụ: kích thước 1MB)
+            Người Gửi->>Người Nhận: POST HTTP Request /upload-chunk (Dữ liệu nhị phân + vị trí chunk)
+            Note over Người Nhận: Ghi chunk nhị phân vào tệp tạm thời
+            Người Nhận-->>Người Gửi: Phản hồi HTTP 200 OK
+            Note over Người Gửi: Tính toán tốc độ truyền dẫn thực tế và vẽ đồ thị Chart.js
+        end
+        
+        Note over Người Nhận: Kiểm tra đủ số lượng Chunks & ghép lại thành file gốc
+        Người Nhận->>Người Nhận: Di chuyển tệp đã ghép vào thư mục "Downloads/PONReceived"
+        Người Nhận-->>Người Gửi: Gửi thông điệp kết thúc truyền tệp (Socket.IO)
+        Note over Người Gửi, Người Nhận: Lưu lịch sử truyền dẫn vào cơ sở dữ liệu SQLite3
+    end
+```
+
+---
+
+### 3. Luồng Kết nối Cuộc gọi Video (WebRTC Signaling)
+Quá trình bắt tay kết nối P2P truyền hình ảnh và âm thanh trực tiếp giữa hai máy tính được thực hiện thông qua kênh trung gian Socket.IO (Signaling Channel).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Người Gọi (Peer A)
+    participant S as Server Socket (Main Process)
+    participant B as Người Nhận (Peer B)
+    
+    A->>A: Lấy luồng Camera & Micro cục bộ (getUserMedia)
+    A->>S: Gửi yêu cầu bắt đầu cuộc gọi (Offer SDP)
+    S->>B: Chuyển tiếp yêu cầu (Offer SDP)
+    Note over B: Hiển thị màn hình cuộc gọi đến
+    B->>B: Lấy luồng Camera & Micro của thiết bị B
+    B->>S: Gửi chấp nhận cuộc gọi (Answer SDP)
+    S->>A: Chuyển tiếp Answer SDP
+    
+    Note over A, B: Quá trình tìm đường truyền tối ưu (ICE Candidate Exchange)
+    loop Trao đổi ICE Candidates
+        A->>S: Gửi ICE Candidate tìm được
+        S->>B: Chuyển tiếp ICE Candidate
+        B->>S: Gửi ICE Candidate tìm được
+        S->>A: Chuyển tiếp ICE Candidate
+    end
+    
+    Note over A, B: Thiết lập đường truyền P2P WebRTC trực tiếp
+    A->>B: Truyền luồng Media (Audio & Video)
+    B->>A: Truyền luồng Media (Audio & Video)
+```
+
+---
+
+### 4. Giải thuật Đo kiểm Độ trễ Mạng (Ping Diagnostics)
+Để cung cấp công cụ kiểm thử chất lượng truyền dẫn cáp quang, giải thuật Ping sử dụng trực tiếp công cụ `ping` của hệ điều hành đích để tính toán thống kê chi tiết.
+
+```mermaid
+graph TD
+    A([Người dùng nhấn nút Ping]) --> B[Lấy IP đích từ thiết bị đang chọn]
+    B --> C{Kiểm tra Hệ điều hành}
+    C -- Windows --> D[Tạo lệnh: ping -n 4 <IP>]
+    C -- macOS / Linux --> E[Tạo lệnh: ping -c 4 <IP>]
+    D --> F[Thực thi lệnh shell qua Child Process]
+    E --> F
+    F --> G[Nhận đầu ra dữ liệu văn bản từ lệnh ping]
+    G --> H[Phân tích kết quả bằng Regular Expressions (Regex)]
+    H --> I[Trích xuất: Số gói gửi/nhận, RTT Min/Max/Avg]
+    I --> J{Tính tỷ lệ mất gói - Packet Loss}
+    J -- Lớn hơn 50% hoặc Avg RTT > 150ms --> K[Đánh giá: Đường truyền Kém/Không ổn định (Unstable)]
+    J -- 0% Loss & Avg RTT < 2ms (PON chuẩn) --> L[Đánh giá: Đường truyền Xuất sắc (Excellent)]
+    J -- Các tham số khác trung bình --> M[Đánh giá: Đường truyền Đạt yêu cầu (Normal)]
+    K --> N[Cập nhật dữ liệu thống kê lên console và giao diện UI]
+    L --> N
+    M --> N
+    N --> O([Kết thúc đo kiểm])
+```
+
+---
+
+## ⚙️ Luồng Hoạt động Chi tiết & Chuyển đổi Giao diện (Theme Switcher Workflow)
+
+Ứng dụng hỗ trợ chuyển đổi linh hoạt giữa giao diện sáng (Light Theme) và tối (Dark Theme) để phù hợp với các điều kiện ánh sáng khác nhau trong phòng thực hành:
+
+1. **Khởi tạo và Mặc định:**
+   - Khi khởi động, ứng dụng đọc trạng thái giao diện đã lưu từ `localStorage` với khóa `lanlink-theme`. Nếu chưa có, ứng dụng sẽ mặc định chạy **Light Theme** để đảm bảo hiển thị rõ ràng các thông số đo đạc quang học dưới ánh đèn phòng thí nghiệm.
+   - Tiến trình chính (Main Process) cấu hình màu nền ban đầu của cửa sổ trình duyệt là `#f5f7fa` (xám sáng) để loại bỏ hoàn toàn hiện tượng nhấp nháy đen trước khi CSS được nạp đầy đủ.
+
+2. **Cơ chế chuyển đổi (Runtime Toggle):**
+   - Người dùng nhấp chọn biểu tượng Mặt trời/Mặt trăng trên Header.
+   - Hàm `applyTheme(theme)` trong `renderer.js` cập nhật thuộc tính `data-theme` trên thẻ `<html>` gốc.
+   - Toàn bộ giao diện cấu hình bằng các biến CSS variables (trong `styles.css`) tự động co giãn màu sắc theo lược đồ màu tương ứng.
+   - Riêng Logo IUH ở góc trái sẽ được hoán đổi nguồn ảnh: hiển thị ảnh màu sắc gốc `Logo_color.png` trên nền sáng và ảnh trắng `logo.png` trên nền tối để tránh mất chi tiết chữ.
+
+3. **Cập nhật Canvas Đồ thị:**
+   - Vì Chart.js hoạt động trên thẻ `<canvas>` vẽ điểm ảnh nhị phân trực tiếp, các thông số màu sắc trục lưới (grid lines) và chỉ số số liệu (ticks color) không tự động nhận biến CSS.
+   - Hàm `applyTheme` sẽ kiểm tra nếu cửa sổ Speed Chart đang hiển thị, nó sẽ hủy phiên bản biểu đồ hiện tại (`destroy()`) và khởi tạo lại biểu đồ mới với bộ cấu hình màu chữ/mạng lưới tương thích hoàn hảo với độ tương phản của nền giao diện mới.
 
 ---
 
