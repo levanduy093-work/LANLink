@@ -144,23 +144,23 @@ sequenceDiagram
 
 ```mermaid
 graph TD
-    A([Người dùng nhấn nút Ping]) --> B[Lấy IP đích từ thiết bị đang chọn]
+    A(["Người dùng nhấn nút Ping"]) --> B["Lấy IP đích từ thiết bị đang chọn"]
     B --> C{Kiểm tra Hệ điều hành}
-    C -- Windows --> D[Tạo lệnh: ping -n 4 <IP>]
-    C -- macOS / Linux --> E[Tạo lệnh: ping -c 4 <IP>]
-    D --> F[Thực thi lệnh shell qua Child Process]
+    C -- "Windows" --> D["Tạo lệnh: ping -n 4 <IP>"]
+    C -- "macOS / Linux" --> E["Tạo lệnh: ping -c 4 <IP>"]
+    D --> F["Thực thi lệnh shell qua Child Process"]
     E --> F
-    F --> G[Nhận đầu ra dữ liệu văn bản từ lệnh ping]
-    G --> H[Phân tích kết quả bằng Regular Expressions (Regex)]
-    H --> I[Trích xuất: Số gói gửi/nhận, RTT Min/Max/Avg]
+    F --> G["Nhận đầu ra dữ liệu văn bản từ lệnh ping"]
+    G --> H["Phân tích kết quả bằng Regular Expressions (Regex)"]
+    H --> I["Trích xuất: Số gói gửi/nhận, RTT Min/Max/Avg"]
     I --> J{Tính tỷ lệ mất gói - Packet Loss}
-    J -- Lớn hơn 50% hoặc Avg RTT > 150ms --> K[Đánh giá: Đường truyền Kém/Không ổn định (Unstable)]
-    J -- 0% Loss & Avg RTT < 2ms (PON chuẩn) --> L[Đánh giá: Đường truyền Xuất sắc (Excellent)]
-    J -- Các tham số khác trung bình --> M[Đánh giá: Đường truyền Đạt yêu cầu (Normal)]
-    K --> N[Cập nhật dữ liệu thống kê lên console và giao diện UI]
+    J -- "Lớn hơn 50% hoặc Avg RTT > 150ms" --> K["Đánh giá: Đường truyền Kém/Không ổn định (Unstable)"]
+    J -- "0% Loss & Avg RTT < 2ms (PON chuẩn)" --> L["Đánh giá: Đường truyền Xuất sắc (Excellent)"]
+    J -- "Các tham số khác trung bình" --> M["Đánh giá: Đường truyền Đạt yêu cầu (Normal)"]
+    K --> N["Cập nhật dữ liệu thống kê lên console và giao diện UI"]
     L --> N
     M --> N
-    N --> O([Kết thúc đo kiểm])
+    N --> O(["Kết thúc đo kiểm"])
 ```
 
 ---
