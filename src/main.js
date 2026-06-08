@@ -8,6 +8,7 @@ const http = require('http');
 const dgram = require('dgram');
 const crypto = require('crypto');
 const url = require('url');
+const { Transform } = require('stream');
 
 // Port configurations
 let APP_PORT = 53317;
@@ -1322,38 +1323,41 @@ ipcMain.handle('file:send', async (_event, payload) => {
     const startedAt = Date.now();
     let lastReportedAt = Date.now();
 
-    fileStream.on('data', (chunk) => {
-      uploadedBytes += chunk.length;
-      
-      const now = Date.now();
-      if (now - lastReportedAt >= 150) {
-        const timeDiffSec = (now - lastReportedAt) / 1000 || 0.001;
-        const bytesDiff = uploadedBytes - lastReportedBytes;
-        const speedMbps = (bytesDiff * 8) / timeDiffSec / 1000000;
+    const progressStream = new Transform({
+      transform(chunk, encoding, callback) {
+        uploadedBytes += chunk.length;
+        
+        const now = Date.now();
+        if (now - lastReportedAt >= 150) {
+          const timeDiffSec = (now - lastReportedAt) / 1000 || 0.001;
+          const bytesDiff = uploadedBytes - lastReportedBytes;
+          const speedMbps = (bytesDiff * 8) / timeDiffSec / 1000000;
 
-        lastReportedAt = now;
-        lastReportedBytes = uploadedBytes;
+          lastReportedAt = now;
+          lastReportedBytes = uploadedBytes;
 
-        sendToRenderer('file:progress', {
-          transferId: sessionId,
-          receiverId: targetId,
-          senderId: device.id,
-          name: fileName,
-          size: stat.size,
-          transferred: uploadedBytes,
-          progress: (uploadedBytes / stat.size) * 100,
-          speedMbps,
-          avgSpeedMbps: (uploadedBytes * 8) / ((now - startedAt) / 1000 || 0.001) / 1000000,
-          status: 'sending'
-        });
+          sendToRenderer('file:progress', {
+            transferId: sessionId,
+            receiverId: targetId,
+            senderId: device.id,
+            name: fileName,
+            size: stat.size,
+            transferred: uploadedBytes,
+            progress: (uploadedBytes / stat.size) * 100,
+            speedMbps,
+            avgSpeedMbps: (uploadedBytes * 8) / ((now - startedAt) / 1000 || 0.001) / 1000000,
+            status: 'sending'
+          });
+        }
+        callback(null, chunk);
       }
     });
 
-    fileStream.on('end', () => {
+    progressStream.on('end', () => {
       req.end();
     });
 
-    fileStream.pipe(req);
+    fileStream.pipe(progressStream).pipe(req);
   });
 });
 
