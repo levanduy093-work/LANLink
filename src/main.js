@@ -738,6 +738,9 @@ function startHttpServer() {
               if (transfer.isPaused) {
                 log('info', `Đang tiếp tục truyền tải theo yêu cầu từ máy nhận...`);
                 transfer.stream.resume();
+                if (transfer.resumePipeline) {
+                  transfer.resumePipeline();
+                }
                 transfer.isPaused = false;
                 sendToRenderer('file:progress', {
                   transferId: sessionId,
@@ -1683,6 +1686,9 @@ ipcMain.handle('lan:toggle-pause-transfer', async (_event, sessionId) => {
     log('info', `Đang tiếp tục truyền tải ${sessionId}...`);
     if (transfer.type === 'send') {
       transfer.stream.resume();
+      if (transfer.resumePipeline) {
+        transfer.resumePipeline();
+      }
     } else {
       transfer.req.resume();
     }

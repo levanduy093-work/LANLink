@@ -11,6 +11,7 @@ const state = {
   chatHistory: [], // array of messages: { id, sender: { id, alias }, receiverId, text, time }
   activeChartSessionId: null,
   speedChartInstance: null,
+  lastTransfersKey: null,
 
   // WebRTC Call State
   callState: 'idle', // 'idle', 'calling', 'ringing', 'connected'
@@ -938,6 +939,7 @@ function renderTransmissions() {
   }
 
   if (list.length === 0) {
+    state.lastTransfersKey = null;
     els.transferList.innerHTML = `
       <div class="empty-state">
         <p class="muted">Không có tiến trình truyền tải nào</p>
@@ -945,6 +947,39 @@ function renderTransmissions() {
     `;
     return;
   }
+
+  // Check if we need to full re-render (status changes or items added/deleted)
+  const currentKey = list.map(t => `${t.transferId}:${t.status}`).join(',');
+  if (state.lastTransfersKey === currentKey) {
+    // Perform in-place updates for progress, speed, and ETA
+    for (const item of list) {
+      const cardEl = document.getElementById(`transfer-card-${item.transferId}`);
+      if (!cardEl) continue;
+
+      const fillEl = cardEl.querySelector('.transfer-progress-fill');
+      if (fillEl) fillEl.style.width = `${item.progress}%`;
+
+      const progressTextEl = cardEl.querySelector('.transfer-progress-text');
+      if (progressTextEl) {
+        progressTextEl.textContent = `${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}`;
+      }
+
+      const speedTextEl = cardEl.querySelector('.transfer-speed-text');
+      if (speedTextEl) {
+        let etaText = '';
+        if ((item.status === 'sending' || item.status === 'receiving') && item.speedMbps && item.speedMbps > 0) {
+          const remainingBytes = item.size - item.transferred;
+          const speedBytesPerSec = (item.speedMbps * 1000000) / 8;
+          const etaSeconds = Math.max(0, Math.round(remainingBytes / speedBytesPerSec));
+          etaText = ` • ~${formatDuration(etaSeconds * 1000)}`;
+        }
+        speedTextEl.textContent = `${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}`;
+      }
+    }
+    return;
+  }
+
+  state.lastTransfersKey = currentKey;
 
   els.transferList.innerHTML = list.map(item => {
     let actionsHtml = '';
@@ -993,7 +1028,7 @@ function renderTransmissions() {
     };
 
     return `
-      <div class="transfer-card" onclick="openSpeedChartModal('${item.transferId}')" style="cursor: pointer;">
+      <div class="transfer-card" id="transfer-card-${item.transferId}" onclick="openSpeedChartModal('${item.transferId}')" style="cursor: pointer;">
         <div class="transfer-card-header">
           <span class="transfer-filename" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
           ${actionsHtml}
@@ -1003,8 +1038,8 @@ function renderTransmissions() {
           <div class="transfer-progress-fill" style="width: ${item.progress}%"></div>
         </div>
         <div class="transfer-card-footer">
-          <span>${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}</span>
-          <span>${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}</span>
+          <span class="transfer-progress-text">${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}</span>
+          <span class="transfer-speed-text">${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}</span>
         </div>
       </div>
     `;
