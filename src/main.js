@@ -663,13 +663,80 @@ function startHttpServer() {
           const session = activeIncomingSession;
 
           if (session && session.sessionId === sessionId) {
-             log('warning', `Tiến trình truyền tải bị hủy bởi người gửi`);
+             log('warning', `Yêu cầu truyền tải bị hủy từ xa`);
             activeIncomingSession = null;
             pendingIncomingSessions.delete(sessionId);
             sendToRenderer('file:progress', {
               transferId: sessionId,
-              status: 'canceled'
+              status: 'canceled',
+              speedMbps: 0
             });
+          }
+
+          const transfer = activeTransfers.get(sessionId);
+          if (transfer) {
+            log('warning', `Tiến trình truyền tải bị hủy từ xa`);
+            if (transfer.stream) {
+              try { transfer.stream.destroy(); } catch (e) {}
+            }
+            if (transfer.req) {
+              try { transfer.req.destroy(); } catch (e) {}
+            }
+            sendToRenderer('file:progress', {
+              transferId: sessionId,
+              status: 'canceled',
+              speedMbps: 0
+            });
+            activeTransfers.delete(sessionId);
+          }
+
+          res.writeHead(200);
+          res.end('OK');
+        }
+        // POST /api/localsend/v2/toggle-pause
+        else if (pathname === '/api/localsend/v2/toggle-pause' && method === 'POST') {
+          const sessionId = parsedUrl.searchParams.get('sessionId');
+          const transfer = activeTransfers.get(sessionId);
+          if (transfer) {
+            if (transfer.type === 'send') {
+              if (transfer.isPaused) {
+                log('info', `Đang tiếp tục truyền tải theo yêu cầu từ máy nhận...`);
+                transfer.stream.resume();
+                transfer.isPaused = false;
+                sendToRenderer('file:progress', {
+                  transferId: sessionId,
+                  status: 'sending'
+                });
+              } else {
+                log('info', `Đang tạm dừng truyền tải theo yêu cầu từ máy nhận...`);
+                transfer.stream.pause();
+                transfer.isPaused = true;
+                sendToRenderer('file:progress', {
+                  transferId: sessionId,
+                  status: 'paused',
+                  speedMbps: 0
+                });
+              }
+            } else if (transfer.type === 'receive') {
+              if (transfer.isPaused) {
+                log('info', `Đang tiếp tục nhận dữ liệu theo yêu cầu từ máy gửi...`);
+                transfer.req.resume();
+                transfer.isPaused = false;
+                sendToRenderer('file:progress', {
+                  transferId: sessionId,
+                  status: 'receiving'
+                });
+              } else {
+                log('info', `Đang tạm dừng nhận dữ liệu theo yêu cầu từ máy gửi...`);
+                transfer.req.pause();
+                transfer.isPaused = true;
+                sendToRenderer('file:progress', {
+                  transferId: sessionId,
+                  status: 'paused',
+                  speedMbps: 0
+                });
+              }
+            }
           }
           res.writeHead(200);
           res.end('OK');
@@ -1527,6 +1594,27 @@ ipcMain.handle('lan:cancel-transfer', async (_event, sessionId) => {
 ipcMain.handle('lan:toggle-pause-transfer', async (_event, sessionId) => {
   const transfer = activeTransfers.get(sessionId);
   if (!transfer) return { ok: false, error: 'Transfer not found' };
+
+  // Notify the peer of pause/resume toggle
+  try {
+    const peer = transfer.peer;
+    const ip = peer.ip || peer.address;
+    const port = peer.port || 53317;
+    if (ip) {
+      const toggleReq = http.request({
+        hostname: ip,
+        port: port,
+        path: `/api/localsend/v2/toggle-pause?sessionId=${sessionId}`,
+        method: 'POST'
+      }, (res) => {
+        res.on('data', () => {});
+      });
+      toggleReq.on('error', () => {});
+      toggleReq.end();
+    }
+  } catch (e) {
+    // ignore
+  }
 
   if (transfer.isPaused) {
     // Resume
