@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
+    "postinstall": "electron-builder install-app-deps",
     "dist": "electron-builder",
     "dist:all": "electron-builder -mwl",
     "dist:mac": "electron-builder --mac",
