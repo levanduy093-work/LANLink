@@ -62,8 +62,24 @@ function initDatabase() {
       durationMs INTEGER,
       receiverId TEXT,
       senderId TEXT,
-      timestamp INTEGER
+      timestamp INTEGER,
+      speedHistory TEXT
     )`);
+
+    // Migration to add speedHistory column if it doesn't exist
+    db.all("PRAGMA table_info(transmissions)", (err, rows) => {
+      if (err) return;
+      const hasSpeedHistory = rows.some(r => r.name === 'speedHistory');
+      if (!hasSpeedHistory) {
+        db.run("ALTER TABLE transmissions ADD COLUMN speedHistory TEXT", (alterErr) => {
+          if (alterErr) {
+            console.error('[SQLite] Error adding speedHistory column:', alterErr.message);
+          } else {
+            console.log('[SQLite] Successfully added speedHistory column to transmissions table');
+          }
+        });
+      }
+    });
   });
 }
 
@@ -90,13 +106,14 @@ function saveTransmission(trans) {
   return new Promise((resolve, reject) => {
     if (!db) return reject(new Error('Database not initialized'));
     db.run(
-      `INSERT INTO transmissions (transferId, name, size, transferred, progress, status, durationMs, receiverId, senderId, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO transmissions (transferId, name, size, transferred, progress, status, durationMs, receiverId, senderId, timestamp, speedHistory)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(transferId) DO UPDATE SET
          transferred = excluded.transferred,
          progress = excluded.progress,
          status = excluded.status,
-         durationMs = excluded.durationMs`,
+         durationMs = excluded.durationMs,
+         speedHistory = excluded.speedHistory`,
       [
         trans.transferId,
         trans.name,
@@ -107,7 +124,8 @@ function saveTransmission(trans) {
         trans.durationMs || 0,
         trans.receiverId || '',
         trans.senderId || '',
-        trans.timestamp || Date.now()
+        trans.timestamp || Date.now(),
+        trans.speedHistory ? JSON.stringify(trans.speedHistory) : '[]'
       ],
       function (err) {
         if (err) {
@@ -164,19 +182,27 @@ function getTransmissionsFromDb() {
         console.error('[SQLite] Error loading transmissions:', err.message);
         reject(err);
       } else {
-        const mapped = rows.map(r => ({
-          transferId: r.transferId,
-          name: r.name,
-          size: r.size,
-          transferred: r.transferred,
-          progress: r.progress,
-          status: r.status,
-          durationMs: r.durationMs,
-          receiverId: r.receiverId,
-          senderId: r.senderId,
-          timestamp: r.timestamp,
-          speedHistory: []
-        }));
+        const mapped = rows.map(r => {
+          let speedHistory = [];
+          try {
+            speedHistory = JSON.parse(r.speedHistory || '[]');
+          } catch (e) {
+            console.error('[SQLite] Failed to parse speedHistory JSON:', e.message);
+          }
+          return {
+            transferId: r.transferId,
+            name: r.name,
+            size: r.size,
+            transferred: r.transferred,
+            progress: r.progress,
+            status: r.status,
+            durationMs: r.durationMs,
+            receiverId: r.receiverId,
+            senderId: r.senderId,
+            timestamp: r.timestamp,
+            speedHistory: speedHistory
+          };
+        });
         resolve(mapped);
       }
     });
@@ -572,13 +598,19 @@ function startHttpServer() {
             req,
             stream: writeStream,
             peer: session.sender,
-            isPaused: false
+            isPaused: false,
+            isCanceled: false
           });
 
           req.on('data', (chunk) => {
             writeStream.write(chunk);
             received += chunk.length;
             file.received = received;
+
+            const transfer = activeTransfers.get(sessionId);
+            if (transfer && transfer.isPaused) {
+              return;
+            }
 
             const now = Date.now();
             if (now - lastReportedAt >= 150) {
@@ -644,6 +676,10 @@ function startHttpServer() {
           });
 
           req.on('error', (err) => {
+            const currentTransfer = activeTransfers.get(sessionId);
+            if (currentTransfer && currentTransfer.isCanceled) {
+              return;
+            }
             activeTransfers.delete(sessionId);
             writeStream.end();
             file.status = 'failed';
@@ -1366,15 +1402,33 @@ ipcMain.handle('file:send', async (_event, payload) => {
       });
     });
 
+    let pauseCallback = null;
+    let pauseChunk = null;
+
     activeTransfers.set(sessionId, {
       type: 'send',
       req,
       stream: fileStream,
       peer,
-      isPaused: false
+      isPaused: false,
+      isCanceled: false,
+      resumePipeline: () => {
+        if (pauseCallback) {
+          const cb = pauseCallback;
+          const chk = pauseChunk;
+          pauseCallback = null;
+          pauseChunk = null;
+          cb(null, chk);
+        }
+      }
     });
 
     req.on('error', (err) => {
+      const currentTransfer = activeTransfers.get(sessionId);
+      if (currentTransfer && currentTransfer.isCanceled) {
+        reject(err);
+        return;
+      }
       activeTransfers.delete(sessionId);
       fileStream.destroy();
       sendToRenderer('file:progress', {
@@ -1394,6 +1448,13 @@ ipcMain.handle('file:send', async (_event, payload) => {
       transform(chunk, encoding, callback) {
         uploadedBytes += chunk.length;
         
+        const transfer = activeTransfers.get(sessionId);
+        if (transfer && transfer.isPaused) {
+          pauseCallback = callback;
+          pauseChunk = chunk;
+          return;
+        }
+
         const now = Date.now();
         if (now - lastReportedAt >= 150) {
           const timeDiffSec = (now - lastReportedAt) / 1000 || 0.001;
@@ -1544,6 +1605,7 @@ ipcMain.handle('lan:cancel-transfer', async (_event, sessionId) => {
   if (!transfer) return { ok: false, error: 'Transfer not found' };
 
   log('warning', `Đang hủy truyền tải ${sessionId} thủ công...`);
+  transfer.isCanceled = true;
 
   // 1. Notify the remote peer of cancellation
   try {

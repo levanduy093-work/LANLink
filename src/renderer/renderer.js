@@ -577,7 +577,8 @@ function registerIpcListeners() {
         durationMs: updated.durationMs || 0,
         receiverId: updated.receiverId || '',
         senderId: updated.senderId || '',
-        timestamp: updated.timestamp || Date.now()
+        timestamp: updated.timestamp || Date.now(),
+        speedHistory: updated.speedHistory || []
       }).catch(err => console.error('Failed to save transmission to DB:', err));
     }
 
