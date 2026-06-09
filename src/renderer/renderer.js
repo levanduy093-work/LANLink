@@ -84,6 +84,7 @@ const els = {
   modalCloseBtn: document.getElementById('modalCloseBtn'),
   chartPlaceholder: document.getElementById('chartPlaceholder'),
   chartCanvasContainer: document.getElementById('chartCanvasContainer'),
+  chartTransferDetails: document.getElementById('chartTransferDetails'),
   speedChartHeaderTitle: document.getElementById('speedChartHeaderTitle'),
   speedChartHeaderSubtitle: document.getElementById('speedChartHeaderSubtitle'),
   speedChartDetailsText: document.getElementById('speedChartDetailsText'),
@@ -995,7 +996,7 @@ function renderTransmissions() {
       if (maxSpeedEl && avgSpeedEl) {
         const stats = getTransferStats(item);
         maxSpeedEl.textContent = `Tốc độ tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s`;
-        avgSpeedEl.textContent = `Tốc độ TB: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s`;
+        avgSpeedEl.textContent = `Tốc độ trung bình: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s`;
       }
     }
     return;
@@ -1065,9 +1066,9 @@ function renderTransmissions() {
           <span class="transfer-progress-text">${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}</span>
           <span class="transfer-speed-text">${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}</span>
         </div>
-        <div class="transfer-card-stats" style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-faint); margin-top: 6px; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 6px;">
+        <div class="transfer-card-stats">
           <span class="transfer-max-speed">Tốc độ tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s</span>
-          <span class="transfer-avg-speed">Tốc độ TB: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s</span>
+          <span class="transfer-avg-speed">Tốc độ trung bình: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s</span>
         </div>
       </div>
     `;
@@ -1246,6 +1247,10 @@ window.closeSpeedChartModal = function () {
     els.chartCanvasContainer.style.display = 'none';
     els.chartPlaceholder.style.display = 'flex';
   }
+  if (els.chartTransferDetails) {
+    els.chartTransferDetails.style.display = 'none';
+    els.chartTransferDetails.innerHTML = '';
+  }
   if (els.speedChartHeaderTitle) {
     els.speedChartHeaderTitle.textContent = 'Đồ thị truyền dẫn';
   }
@@ -1278,6 +1283,46 @@ function updateActiveChart(item) {
 
   if (els.speedChartDetailsText) {
     els.speedChartDetailsText.innerHTML = `Truyền tải: ${formatProgressBytes(item.transferred, item.size)} <br> Hiện tại: ${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'} • Tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s`;
+  }
+
+  if (els.chartTransferDetails) {
+    els.chartTransferDetails.style.display = 'block';
+    
+    const statusMap = {
+      sending: 'Đang gửi',
+      receiving: 'Đang nhận',
+      paused: 'Đã tạm dừng',
+      completed: 'Hoàn thành',
+      failed: 'Thất bại',
+      canceled: 'Đã hủy'
+    };
+    const statusText = statusMap[item.status] || item.status;
+    
+    let etaText = '';
+    if ((item.status === 'sending' || item.status === 'receiving') && item.speedMbps && item.speedMbps > 0) {
+      const remainingBytes = item.size - item.transferred;
+      const speedBytesPerSec = (item.speedMbps * 1000000) / 8;
+      const etaSeconds = Math.max(0, Math.round(remainingBytes / speedBytesPerSec));
+      etaText = ` • ~${formatDuration(etaSeconds * 1000)}`;
+    }
+
+    els.chartTransferDetails.innerHTML = `
+      <div class="transfer-card-header">
+        <span class="transfer-filename" title="${escapeHtml(item.name)}" style="max-width: none;">${escapeHtml(item.name)}</span>
+        <span class="transfer-status-tag ${item.status}">${escapeHtml(statusText)}</span>
+      </div>
+      <div class="transfer-progress-track">
+        <div class="transfer-progress-fill" style="width: ${item.progress}%"></div>
+      </div>
+      <div class="transfer-card-footer">
+        <span class="transfer-progress-text">${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}</span>
+        <span class="transfer-speed-text">${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}</span>
+      </div>
+      <div class="transfer-card-stats">
+        <span class="transfer-max-speed">Tốc độ tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s</span>
+        <span class="transfer-avg-speed">Tốc độ trung bình: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s</span>
+      </div>
+    `;
   }
 
   const history = item.speedHistory || [];

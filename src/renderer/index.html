@@ -78,7 +78,7 @@
       <!-- Local Device Card -->
       <div class="local-device-card">
         <div class="device-card-header">
-          <span class="device-card-label">Thiết bị truyền</span>
+          <span class="device-card-label">Trạng thái nguồn phát</span>
           <span class="status-indicator online">
             <span class="pulse-dot"></span>Sẵn sàng
           </span>
@@ -145,7 +145,7 @@
       <!-- Discovered Devices Sidebar Section -->
       <div class="sidebar-section discovered-section">
         <div class="section-header">
-          <span>Thiết bị nhận</span>
+          <span>Trạng thái nguồn thu</span>
           <button id="rescanBtn" class="btn btn-secondary btn-icon-scan" type="button" title="Quét mạng">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
@@ -197,16 +197,9 @@
             style="display: none; padding: 12px; position: relative;">
             <canvas id="speedChartCanvas" style="width: 100%; height: 100%;"></canvas>
           </div>
+          <div id="chartTransferDetails" class="transfer-card" style="display: none; cursor: default; margin-top: 5px;">
+          </div>
           <div class="call-controls" style="width: 100%; display: flex; gap: 8px;">
-            <button id="startCallBtn" class="btn btn-primary" type="button" disabled
-              style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path
-                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-              <span>Gọi thiết bị</span>
-            </button>
             <button id="pingDeviceBtn" class="btn btn-secondary" type="button" disabled
               style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -360,6 +353,16 @@
             <video id="localVideo" autoplay muted playsinline
               style="position: absolute; bottom: 8px; right: 8px; width: 90px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--accent-cyan); box-shadow: 0 2px 8px rgba(0,0,0,0.6); display: none; z-index: 3; transform: scaleX(-1);"></video>
           </div>
+
+          <button id="startCallBtn" class="btn btn-primary" type="button" disabled
+            style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; flex-shrink: 0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <span>Gọi thiết bị</span>
+          </button>
 
           <div class="call-active-actions" id="callActiveActions"
             style="display: none; width: 100%; justify-content: center; gap: 8px; margin-top: 8px;">

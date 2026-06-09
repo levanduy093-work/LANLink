@@ -1300,6 +1300,14 @@ p, .muted {
   color: var(--text-faint);
 }
 
+.transfer-card-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
 /* Event Logs Tab specific styling */
 .tab-log-header {
   display: flex;
