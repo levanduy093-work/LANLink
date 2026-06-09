@@ -202,6 +202,11 @@ html {
   overflow: hidden !important;
   margin: 0;
   padding: 0;
+  background: var(--bg-color);
+  background-image: 
+    radial-gradient(circle at 10% 10%, var(--radial-1), transparent 30%),
+    radial-gradient(circle at 90% 90%, var(--radial-2), transparent 30%),
+    var(--bg-gradient);
 }
 
 body {
@@ -212,7 +217,8 @@ body {
     radial-gradient(circle at 10% 10%, var(--radial-1), transparent 30%),
     radial-gradient(circle at 90% 90%, var(--radial-2), transparent 30%),
     var(--bg-gradient);
-  height: 100vh;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -416,7 +422,7 @@ p, .muted {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 200px;
+  max-height: 120px;
   overflow-y: auto;
 }
 
@@ -1716,7 +1722,7 @@ p, .muted {
 .app-header {
   display: flex;
   align-items: center;
-  padding: 16px 28px;
+  padding: 10px 24px;
   gap: 36px;
   flex-shrink: 0;
 }
@@ -1766,7 +1772,7 @@ p, .muted {
 }
 
 .header-logo-img {
-  height: 110px;
+  height: 76px;
   width: auto;
   object-fit: contain;
   border-radius: 12px;
@@ -1804,7 +1810,7 @@ p, .muted {
 
 .header-center-divider {
   width: 2px;
-  height: 110px;
+  height: 76px;
   background: rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
