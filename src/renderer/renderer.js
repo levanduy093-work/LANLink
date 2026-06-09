@@ -74,7 +74,7 @@ const els = {
   declineInviteBtn: document.getElementById('declineInviteBtn'),
   acceptInviteBtn: document.getElementById('acceptInviteBtn'),
 
-  // Speed Chart Modal
+  // Speed Chart Modal & Center Panel
   speedChartModal: document.getElementById('speedChartModal'),
   chartModalTitle: document.getElementById('chartModalTitle'),
   chartModalSubtitle: document.getElementById('chartModalSubtitle'),
@@ -82,6 +82,11 @@ const els = {
   modalCancelBtn: document.getElementById('modalCancelBtn'),
   modalDeleteBtn: document.getElementById('modalDeleteBtn'),
   modalCloseBtn: document.getElementById('modalCloseBtn'),
+  chartPlaceholder: document.getElementById('chartPlaceholder'),
+  chartCanvasContainer: document.getElementById('chartCanvasContainer'),
+  speedChartHeaderTitle: document.getElementById('speedChartHeaderTitle'),
+  speedChartHeaderSubtitle: document.getElementById('speedChartHeaderSubtitle'),
+  speedChartDetailsText: document.getElementById('speedChartDetailsText'),
 
   // Video Call DOMs
   startCallBtn: document.getElementById('startCallBtn'),
@@ -585,8 +590,16 @@ function registerIpcListeners() {
 
     renderTransmissions();
 
-    // Real-time speed chart update if this session's modal is active
-    if (state.activeChartSessionId === progress.transferId) {
+    // Real-time speed chart update or auto-focus
+    if (isActiveStatus(progress.status)) {
+      if (!state.activeChartSessionId || state.activeChartSessionId === progress.transferId) {
+        if (state.activeChartSessionId !== progress.transferId) {
+          window.openSpeedChartModal(progress.transferId);
+        } else {
+          updateActiveChart(updated);
+        }
+      }
+    } else if (state.activeChartSessionId === progress.transferId) {
       updateActiveChart(updated);
     }
   });
@@ -975,6 +988,14 @@ function renderTransmissions() {
         }
         speedTextEl.textContent = `${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}`;
       }
+
+      const maxSpeedEl = cardEl.querySelector('.transfer-max-speed');
+      const avgSpeedEl = cardEl.querySelector('.transfer-avg-speed');
+      if (maxSpeedEl && avgSpeedEl) {
+        const stats = getTransferStats(item);
+        maxSpeedEl.textContent = `Tốc độ tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s`;
+        avgSpeedEl.textContent = `Tốc độ TB: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s`;
+      }
     }
     return;
   }
@@ -1027,6 +1048,8 @@ function renderTransmissions() {
       canceled: 'Đã hủy'
     };
 
+    const stats = getTransferStats(item);
+
     return `
       <div class="transfer-card" id="transfer-card-${item.transferId}" onclick="openSpeedChartModal('${item.transferId}')" style="cursor: pointer;">
         <div class="transfer-card-header">
@@ -1040,6 +1063,10 @@ function renderTransmissions() {
         <div class="transfer-card-footer">
           <span class="transfer-progress-text">${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}</span>
           <span class="transfer-speed-text">${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}</span>
+        </div>
+        <div class="transfer-card-stats" style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-faint); margin-top: 6px; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 6px;">
+          <span class="transfer-max-speed">Tốc độ tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s</span>
+          <span class="transfer-avg-speed">Tốc độ TB: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s</span>
         </div>
       </div>
     `;
@@ -1106,7 +1133,32 @@ function formatDuration(ms) {
   return `${seconds}s`;
 }
 
-// --- Speed Chart Modal & Actions ---
+// --- Speed Chart Helper & Actions ---
+
+function getTransferStats(item) {
+  const history = item.speedHistory || [];
+  if (history.length === 0) {
+    const currentSpeed = item.speedMbps || 0;
+    return {
+      maxSpeedMbps: currentSpeed,
+      avgSpeedMbps: currentSpeed
+    };
+  }
+
+  let maxSpeed = 0;
+  let sumSpeed = 0;
+  for (const h of history) {
+    if (h.speed > maxSpeed) {
+      maxSpeed = h.speed;
+    }
+    sumSpeed += h.speed;
+  }
+
+  return {
+    maxSpeedMbps: maxSpeed,
+    avgSpeedMbps: sumSpeed / history.length
+  };
+}
 
 window.openSpeedChartModal = function (transferId) {
   const item = state.activeTransfers.get(transferId);
@@ -1114,11 +1166,16 @@ window.openSpeedChartModal = function (transferId) {
 
   state.activeChartSessionId = transferId;
 
-  // Set modal texts
-  els.chartModalTitle.textContent = item.name;
+  // Show center canvas container, hide placeholder
+  if (els.chartCanvasContainer && els.chartPlaceholder) {
+    els.chartCanvasContainer.style.display = 'block';
+    els.chartPlaceholder.style.display = 'none';
+  }
 
-  // Open modal in DOM
-  els.speedChartModal.classList.add('open');
+  // Set header title
+  if (els.speedChartHeaderTitle) {
+    els.speedChartHeaderTitle.textContent = `Biểu đồ: ${item.name}`;
+  }
 
   // Create Chart
   const ctx = document.getElementById('speedChartCanvas').getContext('2d');
@@ -1143,7 +1200,7 @@ window.openSpeedChartModal = function (transferId) {
     data: {
       labels: labels,
       datasets: [{
-        label: 'Speed (MB/s)',
+        label: 'Tốc độ (MB/s)',
         data: data,
         borderColor: '#22d3ee', // var(--accent-cyan)
         backgroundColor: 'rgba(34, 211, 238, 0.08)',
@@ -1174,24 +1231,37 @@ window.openSpeedChartModal = function (transferId) {
     }
   });
 
-  // Perform initial update of text and buttons
+  // Perform initial update of text
   updateActiveChart(item);
 };
 
 window.closeSpeedChartModal = function () {
-  els.speedChartModal.classList.remove('open');
   state.activeChartSessionId = null;
   if (state.speedChartInstance) {
     state.speedChartInstance.destroy();
     state.speedChartInstance = null;
+  }
+  if (els.chartCanvasContainer && els.chartPlaceholder) {
+    els.chartCanvasContainer.style.display = 'none';
+    els.chartPlaceholder.style.display = 'flex';
+  }
+  if (els.speedChartHeaderTitle) {
+    els.speedChartHeaderTitle.textContent = 'Đồ thị truyền dẫn';
+  }
+  if (els.speedChartHeaderSubtitle) {
+    els.speedChartHeaderSubtitle.textContent = 'Đang rảnh';
+  }
+  if (els.speedChartDetailsText) {
+    els.speedChartDetailsText.textContent = 'Sẵn sàng hiển thị đồ thị truyền tải';
   }
 };
 
 function updateActiveChart(item) {
   if (!state.speedChartInstance) return;
 
-  const subtitleEl = document.getElementById('chartModalSubtitle');
-  if (subtitleEl) {
+  const stats = getTransferStats(item);
+
+  if (els.speedChartHeaderSubtitle) {
     const statusMap = {
       sending: 'Đang gửi',
       receiving: 'Đang nhận',
@@ -1202,10 +1272,12 @@ function updateActiveChart(item) {
     };
     const statusText = statusMap[item.status] || item.status;
     const durationText = item.durationMs !== undefined ? ` • ${formatDuration(item.durationMs)}` : '';
-    subtitleEl.innerHTML = `${statusText} • ${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)} • ${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${durationText}`;
+    els.speedChartHeaderSubtitle.textContent = `${statusText} • ${Math.round(item.progress)}% • Tốc độ TB: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s${durationText}`;
   }
 
-  updateModalButtons(item);
+  if (els.speedChartDetailsText) {
+    els.speedChartDetailsText.innerHTML = `Truyền tải: ${formatProgressBytes(item.transferred, item.size)} <br> Hiện tại: ${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'} • Tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s`;
+  }
 
   const history = item.speedHistory || [];
   const data = history.map(h => h.speed / 8); // convert to MB/s
@@ -1214,33 +1286,6 @@ function updateActiveChart(item) {
   state.speedChartInstance.data.labels = labels;
   state.speedChartInstance.data.datasets[0].data = data;
   state.speedChartInstance.update('none'); // silent update (faster)
-}
-
-function updateModalButtons(item) {
-  const isActive = item.status === 'sending' || item.status === 'receiving' || item.status === 'paused';
-  if (isActive) {
-    els.modalPauseBtn.style.display = 'inline-block';
-    els.modalCancelBtn.style.display = 'inline-block';
-    els.modalDeleteBtn.style.display = 'none';
-
-    els.modalPauseBtn.textContent = item.status === 'paused' ? 'Tiếp tục' : 'Tạm dừng';
-
-    // Set up click handlers dynamically for the modal buttons
-    els.modalPauseBtn.onclick = (e) => window.togglePauseTransfer(e, item.transferId);
-    els.modalCancelBtn.onclick = (e) => {
-      window.cancelTransfer(e, item.transferId);
-      window.closeSpeedChartModal();
-    };
-  } else {
-    els.modalPauseBtn.style.display = 'none';
-    els.modalCancelBtn.style.display = 'none';
-    els.modalDeleteBtn.style.display = 'inline-block';
-
-    els.modalDeleteBtn.onclick = (e) => {
-      window.deleteTransfer(e, item.transferId);
-      window.closeSpeedChartModal();
-    };
-  }
 }
 
 window.togglePauseTransfer = async function (event, transferId) {
@@ -1788,3 +1833,27 @@ function handlePingDone(stats) {
   els.pingSummary.style.display = 'block';
   addLog('success', `Đo kiểm tới ${currentPingIp} hoàn tất. Avg RTT: ${stats.avg}ms, Loss: ${stats.lossPercent}%`);
 }
+
+// --- Auto-scaling for Responsive Viewport ---
+function adjustWindowScale() {
+  const baseWidth = 1200; // Matches min-width of app-shell
+  const baseHeight = 820; // Base height to fit all layout sections comfortably
+  const winWidth = window.innerWidth;
+  const winHeight = window.innerHeight;
+  
+  const scaleX = winWidth / baseWidth;
+  const scaleY = winHeight / baseHeight;
+  
+  // Choose the smaller scale to ensure fit
+  const scale = Math.min(scaleX, scaleY);
+  
+  // Constrain scale between 0.4 and 2.5 (enable scaling up on high-res monitors and down on small screens)
+  const finalScale = Math.max(0.4, Math.min(scale, 2.5));
+  
+  console.log(`[Viewport AutoScale] Win: ${winWidth}x${winHeight}, Scale: ${scale.toFixed(3)} -> Final: ${finalScale.toFixed(3)}`);
+  document.documentElement.style.zoom = finalScale;
+}
+
+window.addEventListener('resize', adjustWindowScale);
+window.addEventListener('load', adjustWindowScale);
+adjustWindowScale();

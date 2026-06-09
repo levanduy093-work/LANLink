@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hệ thống truyền dẫn quang PON</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="./styles.css">
 </head>
+
 <body>
   <header class="app-header panel">
     <div class="header-left">
@@ -17,34 +21,13 @@
     <div class="header-center-divider"></div>
     <div class="header-right">
       <div class="project-info">
-        <span class="info-label">ĐỀ TÀI:</span>
-        <h1 class="project-title">THIẾT KẾ MÔ HÌNH HỆ THỐNG TRUYỀN DẪN QUANG PON ỨNG DỤNG TRONG PHÒNG THỰC HÀNH</h1>
-      </div>
-      <div class="people-info">
-        <div class="people-group svth-group">
-          <span class="role-badge svth-badge">SVTH</span>
-          <div class="students-list">
-            <span class="student-item">
-              <span class="student-name">NGUYỄN QUANG THIỆN</span>
-              <span class="student-id">24001441</span>
-            </span>
-            <span class="student-separator">•</span>
-            <span class="student-item">
-              <span class="student-name">HOÀNG TRỌNG NGHĨA</span>
-              <span class="student-id">24000951</span>
-            </span>
-          </div>
-        </div>
-        <div class="people-divider"></div>
-        <div class="people-group gvhd-group">
-          <span class="role-badge gvhd-badge">GVHD</span>
-          <span class="teacher-name">Th.S TÔN THẤT PHÙNG</span>
-        </div>
+        <h1 class="project-title"> MÔ HÌNH THÍ NGHIỆM TRUYỀN DẪN QUANG</h1>
       </div>
     </div>
     <div class="theme-switcher">
       <button id="themeToggleLight" class="theme-btn active" title="Giao diện sáng">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
           <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -57,7 +40,8 @@
         </svg>
       </button>
       <button id="themeToggleDark" class="theme-btn" title="Giao diện tối">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
       </button>
@@ -65,7 +49,7 @@
   </header>
 
   <div class="app-shell">
-    
+
     <!-- LEFT SIDEBAR: Device Info & Interfaces -->
     <aside class="sidebar panel">
 
@@ -80,7 +64,12 @@
         </div>
         <div class="device-card-body">
           <div class="device-avatar">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
           </div>
           <div>
             <h3 id="localDeviceAlias">Đang phát hiện tên...</h3>
@@ -112,11 +101,21 @@
           <div class="input-row">
             <input id="peerIpInput" type="text" placeholder="Ví dụ: 192.168.1.15" required autocomplete="off">
             <button id="peerConnectBtn" class="btn btn-primary btn-icon" type="submit" title="Kết nối tới thiết bị">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
             </button>
           </div>
-          <button id="scanSubnetBtn" class="btn btn-secondary" type="button" style="margin-top: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; padding: 8px;" title="Quét toàn bộ mạng con">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <button id="scanSubnetBtn" class="btn btn-secondary" type="button"
+            style="margin-top: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; padding: 8px;"
+            title="Quét toàn bộ mạng con">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             <span>Quét mạng con</span>
           </button>
         </form>
@@ -127,11 +126,14 @@
         <div class="section-header">
           <span>Thiết bị lân cận</span>
           <button id="rescanBtn" class="btn btn-secondary btn-icon-scan" type="button" title="Quét mạng">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67" />
+            </svg>
             <span>Quét</span>
           </button>
         </div>
-        
+
         <div class="sidebar-discovery-area">
           <!-- Radar Scan Animation (compact) -->
           <div class="radar-container compact" id="radarContainer">
@@ -157,41 +159,50 @@
     <!-- CENTER CONSOLE: Video + Transmitter -->
     <main class="main-content">
 
-      <!-- Video Call Panel (top of center) -->
-      <section class="video-call-section panel" id="videoCenterPanel">
+      <!-- Speed Chart Section (top of center) -->
+      <section class="speed-chart-section panel" id="speedChartSection"
+        style="display: flex; flex-direction: column; gap: 10px; flex: 6; min-height: 0;">
         <div class="section-header">
-          <h2>Giao tiếp Video</h2>
-          <span id="callStatusBadge" class="badge">Ngoại tuyến</span>
+          <h2 id="speedChartHeaderTitle">Đồ thị truyền dẫn</h2>
+          <span id="speedChartHeaderSubtitle" class="badge">Đang rảnh</span>
         </div>
         <div class="video-call-body">
-          <div class="video-container" id="videoContainer">
-            <div class="video-placeholder" id="videoPlaceholder">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-              <p class="muted" id="callPlaceholderText">Sẵn sàng bắt đầu cuộc gọi LAN</p>
-            </div>
-            <video id="remoteVideo" autoplay playsinline></video>
-            <video id="localVideo" autoplay muted playsinline></video>
+          <div id="chartPlaceholder" class="video-container"
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            <p class="muted" id="speedChartDetailsText" style="margin: 0;">Sẵn sàng hiển thị đồ thị truyền tải</p>
+          </div>
+          <div id="chartCanvasContainer" class="video-container"
+            style="display: none; padding: 12px; box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6); position: relative;">
+            <canvas id="speedChartCanvas" style="width: 100%; height: 100%;"></canvas>
           </div>
           <div class="call-controls" style="width: 100%; display: flex; gap: 8px;">
-            <button id="startCallBtn" class="btn btn-primary" type="button" disabled style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <button id="startCallBtn" class="btn btn-primary" type="button" disabled
+              style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
               <span>Gọi thiết bị</span>
             </button>
-            <button id="pingDeviceBtn" class="btn btn-secondary" type="button" disabled style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+            <button id="pingDeviceBtn" class="btn btn-secondary" type="button" disabled
+              style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="22" y1="12" x2="18" y2="12" />
+                <line x1="6" y1="12" x2="2" y2="12" />
+                <line x1="12" y1="6" x2="12" y2="2" />
+                <line x1="12" y1="22" x2="12" y2="18" />
+              </svg>
               <span>Đo tốc độ (Ping)</span>
             </button>
-            <div class="call-active-actions" id="callActiveActions" style="display: none; width: 100%; justify-content: center; gap: 12px;">
-              <button id="toggleMicBtn" class="btn btn-secondary btn-icon" type="button" title="Bật/Tắt Micrô">
-                <svg id="micIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
-              </button>
-              <button id="toggleCamBtn" class="btn btn-secondary btn-icon" type="button" title="Bật/Tắt Camera">
-                <svg id="camIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-              </button>
-              <button id="hangUpBtn" class="btn btn-secondary btn-danger btn-icon" type="button" title="Kết thúc cuộc gọi">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6" style="transform: rotate(135deg); transform-origin: center;"/></svg>
-              </button>
-            </div>
           </div>
         </div>
       </section>
@@ -207,7 +218,13 @@
         <div class="tab-content" id="tabFilesContent">
           <div class="file-dropzone" id="fileDropzone">
             <div class="dropzone-illustration">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <polyline points="9 15 12 12 15 15" />
+              </svg>
             </div>
             <h3>Kéo &amp; Thả tệp vào đây</h3>
             <p class="muted">Hoặc nhấp để chọn tệp từ máy tính</p>
@@ -216,14 +233,22 @@
 
           <div class="selected-file-card" id="selectedFileCard" style="display: none;">
             <div class="file-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
             </div>
             <div class="file-details">
               <h4 id="selectedFileName">file_name.ext</h4>
               <span id="selectedFileSize" class="muted">0 KB</span>
             </div>
             <button id="clearFileBtn" class="btn-clear" type="button" title="Xóa lựa chọn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
         </div>
@@ -234,9 +259,14 @@
               <div class="empty-state-text">Chọn một thiết bị để bắt đầu trò chuyện</div>
             </div>
             <form id="textMessageForm" class="chat-composer">
-              <input id="textMessageInput" type="text" placeholder="Nhập tin nhắn LAN..." required autocomplete="off" disabled>
+              <input id="textMessageInput" type="text" placeholder="Nhập tin nhắn LAN..." required autocomplete="off"
+                disabled>
               <button id="sendMsgBtn" class="btn btn-primary btn-icon-send" type="submit" disabled>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
               </button>
             </form>
           </div>
@@ -260,7 +290,11 @@
           </div>
           <button id="transmitBtn" class="btn btn-primary" type="button" disabled>
             <span>Truyền dữ liệu</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
           </button>
         </div>
       </section>
@@ -268,7 +302,7 @@
 
     <!-- RIGHT RAIL: Active Transmissions only -->
     <aside class="right-panel">
-      
+
       <!-- Transmissions Console -->
       <section class="transmissions-section panel">
         <div class="section-header">
@@ -278,9 +312,67 @@
         <div id="transferList" class="transfer-list">
           <div class="empty-state">
             <div class="empty-illustration">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
             </div>
             <p class="muted">Không có tiến trình truyền tải nào</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Video Call Panel (moved from center) -->
+      <section class="video-call-section panel" id="videoRightPanel" style="margin-top: 0;">
+        <div class="section-header">
+          <h2>Giao tiếp Video</h2>
+          <span id="callStatusBadge" class="badge">Ngoại tuyến</span>
+        </div>
+        <div class="video-call-body" style="margin-top: 10px;">
+          <div class="video-container" id="videoContainer" style="position: relative;">
+            <div class="video-placeholder" id="videoPlaceholder">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 7l-7 5 7 5V7z" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+              <p class="muted" id="callPlaceholderText" style="font-size: 11px;">Sẵn sàng bắt đầu cuộc gọi LAN</p>
+            </div>
+            <video id="remoteVideo" autoplay playsinline
+              style="width: 100%; height: 100%; object-fit: cover; display: none; z-index: 1;"></video>
+            <video id="localVideo" autoplay muted playsinline
+              style="position: absolute; bottom: 8px; right: 8px; width: 90px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--accent-cyan); box-shadow: 0 2px 8px rgba(0,0,0,0.6); display: none; z-index: 3; transform: scaleX(-1);"></video>
+          </div>
+
+          <div class="call-active-actions" id="callActiveActions"
+            style="display: none; width: 100%; justify-content: center; gap: 8px; margin-top: 8px;">
+            <button id="toggleMicBtn" class="btn btn-secondary btn-icon" type="button" title="Bật/Tắt Micrô"
+              style="width: 32px; height: 32px; padding: 0;">
+              <svg id="micIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+              </svg>
+            </button>
+            <button id="toggleCamBtn" class="btn btn-secondary btn-icon" type="button" title="Bật/Tắt Camera"
+              style="width: 32px; height: 32px; padding: 0;">
+              <svg id="camIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 7l-7 5 7 5V7z" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+            </button>
+            <button id="hangUpBtn" class="btn btn-secondary btn-danger btn-icon" type="button" title="Kết thúc cuộc gọi"
+              style="width: 32px; height: 32px; padding: 0;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6"
+                  style="transform: rotate(135deg); transform-origin: center;" />
+              </svg>
+            </button>
           </div>
         </div>
       </section>
@@ -293,20 +385,25 @@
     <div class="modal-card panel">
       <div class="modal-header">
         <div class="invite-avatar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1115.71 8h1.79a4.5 4.5 0 012.5 8.242"/><path d="M12 12v9"/><path d="M8 17l4 4 4-4"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14.899A7 7 0 1115.71 8h1.79a4.5 4.5 0 012.5 8.242" />
+            <path d="M12 12v9" />
+            <path d="M8 17l4 4 4-4" />
+          </svg>
         </div>
         <div>
           <h3 id="inviteSenderName">Nice Orange</h3>
           <p class="muted">muốn chia sẻ tệp với bạn</p>
         </div>
       </div>
-      
+
       <div class="modal-body">
         <div class="invite-file-list" id="inviteFileList">
           <!-- Files will list here -->
         </div>
       </div>
-      
+
       <div class="modal-footer">
         <button id="declineInviteBtn" class="btn btn-secondary" type="button">Từ chối</button>
         <button id="acceptInviteBtn" class="btn btn-primary" type="button">Chấp nhận</button>
@@ -318,15 +415,20 @@
   <div class="modal-backdrop" id="incomingCallModal">
     <div class="modal-card panel">
       <div class="modal-header">
-        <div class="invite-avatar" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--accent-violet);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <div class="invite-avatar"
+          style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--accent-violet);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 7l-7 5 7 5V7z" />
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+          </svg>
         </div>
         <div>
           <h3 id="incomingCallSenderName">Nice Orange</h3>
           <p class="muted">đang mời bạn tham gia cuộc gọi video</p>
         </div>
       </div>
-      
+
       <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 18px;">
         <button id="declineCallBtn" class="btn btn-secondary btn-danger" type="button">Từ chối</button>
         <button id="acceptCallBtn" class="btn btn-primary" type="button">Chấp nhận</button>
@@ -339,28 +441,35 @@
     <div class="modal-card panel chart-modal">
       <div class="modal-header">
         <div class="modal-header-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
         </div>
         <div style="flex-grow: 1;">
           <h3 id="chartModalTitle">file_name.bin</h3>
           <p class="muted" id="chartModalSubtitle">Đang gửi • 45.2% • 12.34 Mbps</p>
         </div>
       </div>
-      
+
       <div class="modal-body">
         <div class="chart-container" style="position: relative; height: 240px; width: 100%">
-          <canvas id="speedChartCanvas"></canvas>
+          <canvas id="speedChartModalCanvas"></canvas>
         </div>
       </div>
-      
+
       <div class="modal-body">
         <!-- Optional extra info or telemetry can go here -->
       </div>
-      
+
       <div class="modal-footer">
         <button id="modalPauseBtn" class="btn btn-secondary" type="button" style="display: none;">Tạm dừng</button>
-        <button id="modalCancelBtn" class="btn btn-secondary btn-danger" type="button" style="display: none;">Hủy</button>
-        <button id="modalDeleteBtn" class="btn btn-secondary btn-danger" type="button" style="display: none;">Xóa</button>
+        <button id="modalCancelBtn" class="btn btn-secondary btn-danger" type="button"
+          style="display: none;">Hủy</button>
+        <button id="modalDeleteBtn" class="btn btn-secondary btn-danger" type="button"
+          style="display: none;">Xóa</button>
         <button id="modalCloseBtn" class="btn btn-primary" type="button">Đóng</button>
       </div>
     </div>
@@ -371,52 +480,73 @@
     <div class="modal-card panel ping-modal" style="max-width: 500px; width: 100%;">
       <div class="modal-header">
         <div class="modal-header-icon" style="background: rgba(30, 215, 96, 0.1); color: var(--accent-cyan);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="22" y1="12" x2="18" y2="12" />
+            <line x1="6" y1="12" x2="2" y2="12" />
+            <line x1="12" y1="6" x2="12" y2="2" />
+            <line x1="12" y1="22" x2="12" y2="18" />
+          </svg>
         </div>
         <div style="flex-grow: 1;">
           <h3 id="pingModalTitle">Đo tốc độ & độ trễ mạng</h3>
           <p class="muted" id="pingModalSubtitle">Sẵn sàng đo kiểm...</p>
         </div>
       </div>
-      
+
       <div class="modal-body" style="padding-top: 10px;">
-        <div id="pingConsole" style="background: var(--console-bg); border-radius: 8px; border: 1px solid var(--console-border); padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--console-text); height: 180px; overflow-y: auto; margin-bottom: 16px;">
+        <div id="pingConsole"
+          style="background: var(--console-bg); border-radius: 8px; border: 1px solid var(--console-border); padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--console-text); height: 180px; overflow-y: auto; margin-bottom: 16px;">
           <div style="color: var(--text-faint);">Chưa bắt đầu kiểm tra.</div>
         </div>
 
-        <div class="ping-progress-container" style="height: 4px; background: var(--progress-bg); border-radius: 2px; overflow: hidden; margin-bottom: 16px;">
-          <div id="pingProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet)); transition: width 0.3s ease;"></div>
+        <div class="ping-progress-container"
+          style="height: 4px; background: var(--progress-bg); border-radius: 2px; overflow: hidden; margin-bottom: 16px;">
+          <div id="pingProgressBar"
+            style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet)); transition: width 0.3s ease;">
+          </div>
         </div>
 
-        <div id="pingSummary" style="display: none; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--card-border); padding: 16px;">
-          <h4 style="margin-top: 0; margin-bottom: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint);">THỐNG KÊ KẾT QUẢ</h4>
-          
+        <div id="pingSummary"
+          style="display: none; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--card-border); padding: 16px;">
+          <h4
+            style="margin-top: 0; margin-bottom: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint);">
+            THỐNG KÊ KẾT QUẢ</h4>
+
           <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px;">
-            <div style="background: var(--card-bg); border-radius: 8px; padding: 10px; border: 1px solid var(--card-border);">
-              <span class="muted" style="display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase;">Gói tin (Packets)</span>
+            <div
+              style="background: var(--card-bg); border-radius: 8px; padding: 10px; border: 1px solid var(--card-border);">
+              <span class="muted"
+                style="display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase;">Gói tin
+                (Packets)</span>
               <div style="font-size: 12px; color: var(--text-normal); font-weight: 500;">
-                Gửi: <span id="pingSentCount" style="color: var(--accent-cyan);">4</span> | 
-                Nhận: <span id="pingRecvCount" style="color: #4cd964;">0</span> | 
+                Gửi: <span id="pingSentCount" style="color: var(--accent-cyan);">4</span> |
+                Nhận: <span id="pingRecvCount" style="color: #4cd964;">0</span> |
                 Mất: <span id="pingLostCount" style="color: #ff3b30;">0</span> (<span id="pingLossPercent">0%</span>)
               </div>
             </div>
-            
-            <div style="background: var(--card-bg); border-radius: 8px; padding: 10px; border: 1px solid var(--card-border);">
-              <span class="muted" style="display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase;">Thời gian khứ hồi (RTT)</span>
+
+            <div
+              style="background: var(--card-bg); border-radius: 8px; padding: 10px; border: 1px solid var(--card-border);">
+              <span class="muted"
+                style="display: block; font-size: 10px; margin-bottom: 4px; text-transform: uppercase;">Thời gian khứ
+                hồi (RTT)</span>
               <div style="font-size: 12px; color: var(--text-normal); font-weight: 500;">
-                Min: <span id="pingMinRtt">-</span> ms | 
-                Max: <span id="pingMaxRtt">-</span> ms | 
+                Min: <span id="pingMinRtt">-</span> ms |
+                Max: <span id="pingMaxRtt">-</span> ms |
                 Avg: <span id="pingAvgRtt" style="color: var(--accent-cyan); font-weight: 600;">-</span> ms
               </div>
             </div>
           </div>
 
-          <div id="pingSpeedRating" style="margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 8px;">
+          <div id="pingSpeedRating"
+            style="margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 8px;">
             <!-- Badge content -->
           </div>
         </div>
       </div>
-      
+
       <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 10px;">
         <button id="pingRetryBtn" class="btn btn-secondary" type="button" style="display: none;">Thử lại</button>
         <button id="pingCloseBtn" class="btn btn-primary" type="button">Đóng</button>
@@ -428,4 +558,5 @@
   <script src="./chart.umd.js"></script>
   <script src="./renderer.js"></script>
 </body>
+
 </html>

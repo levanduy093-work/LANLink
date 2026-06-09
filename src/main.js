@@ -1924,8 +1924,8 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 900,
-    minWidth: 1180,
-    minHeight: 720,
+    minWidth: 800,
+    minHeight: 500,
     backgroundColor: '#f5f7fa',
     title: 'Hệ thống truyền dẫn quang PON',
     webPreferences: {

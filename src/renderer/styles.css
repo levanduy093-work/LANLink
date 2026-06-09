@@ -196,6 +196,14 @@ input, textarea, [contenteditable] {
   -webkit-user-select: text;
 }
 
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--text-main);
@@ -1099,14 +1107,24 @@ p, .muted {
 }
 
 /* ----------------------------------------------------
-   VIDEO CALL STYLING
+   VIDEO CALL & SPEED CHART STYLING
 ---------------------------------------------------- */
-.video-call-section {
+.video-call-section,
+.speed-chart-section {
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: 6;
   min-height: 0;
+}
+
+.right-panel .video-call-section {
+  flex: none;
+}
+
+.right-panel .video-container {
+  height: 220px;
+  flex: none;
 }
 
 .video-call-body {
