@@ -1296,15 +1296,16 @@ p, .muted {
 .transfer-card-footer {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-faint);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .transfer-card-stats {
   display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-faint);
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -1780,7 +1781,7 @@ p, .muted {
 }
 
 .header-logo-img {
-  height: 76px;
+  height: 90px;
   width: auto;
   object-fit: contain;
   border-radius: 12px;
@@ -1818,7 +1819,7 @@ p, .muted {
 
 .header-center-divider {
   width: 2px;
-  height: 76px;
+  height: 90px;
   background: rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
@@ -1826,7 +1827,7 @@ p, .muted {
 .header-right {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  justify-content: center;
   flex-grow: 1;
   min-width: 0;
   align-items: center;

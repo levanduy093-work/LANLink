@@ -588,10 +588,11 @@ function startHttpServer() {
           file.status = 'uploading';
           file.filePath = filePath;
 
-          let received = 0;
+           let received = 0;
           let lastReportedBytes = 0;
           const startedAt = Date.now();
           let lastReportedAt = Date.now();
+          let maxSpeedMbps = 0;
 
           activeTransfers.set(sessionId, {
             type: 'receive',
@@ -618,6 +619,10 @@ function startHttpServer() {
               const bytesDiff = received - lastReportedBytes;
               const speedMbps = (bytesDiff * 8) / timeDiffSec / 1000000;
 
+              if (speedMbps > maxSpeedMbps) {
+                maxSpeedMbps = speedMbps;
+              }
+
               lastReportedAt = now;
               lastReportedBytes = received;
 
@@ -642,6 +647,10 @@ function startHttpServer() {
             file.status = 'completed';
             log('success', `Đã nhận tệp: ${file.fileName}`);
 
+            const finalDurationSec = (Date.now() - startedAt) / 1000 || 0.001;
+            const finalAvgSpeedMbps = (received * 8) / finalDurationSec / 1000000;
+            const finalMaxSpeedMbps = maxSpeedMbps || finalAvgSpeedMbps || 0;
+
             sendToRenderer('file:progress', {
               transferId: sessionId,
               receiverId: device.id,
@@ -651,10 +660,19 @@ function startHttpServer() {
               transferred: file.size,
               progress: 100,
               speedMbps: 0,
-              avgSpeedMbps: 0,
+              avgSpeedMbps: finalAvgSpeedMbps,
               status: 'completed',
-              filePath
+              filePath,
+              rxMaxSpeedMbps: finalMaxSpeedMbps,
+              rxAvgSpeedMbps: finalAvgSpeedMbps
             });
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              ok: true,
+              maxSpeedMbps: finalMaxSpeedMbps,
+              avgSpeedMbps: finalAvgSpeedMbps
+            }));
 
             // Check if all files in the session are completed
             let allFinished = true;
@@ -1376,11 +1394,23 @@ ipcMain.handle('file:send', async (_event, payload) => {
         'Content-Length': stat.size
       }
     }, (res) => {
-      res.on('data', () => {});
+      let resData = '';
+      res.on('data', (chunk) => {
+        resData += chunk;
+      });
       res.on('end', () => {
         activeTransfers.delete(sessionId);
         if (res.statusCode === 200) {
           log('success', `Đã gửi tệp ${fileName} thành công`);
+          
+          let rxStats = {};
+          try {
+            rxStats = JSON.parse(resData);
+          } catch (err) {}
+
+          const rxMax = rxStats.maxSpeedMbps || 0;
+          const rxAvg = rxStats.avgSpeedMbps || 0;
+
           sendToRenderer('file:progress', {
             transferId: sessionId,
             receiverId: targetId,
@@ -1390,8 +1420,10 @@ ipcMain.handle('file:send', async (_event, payload) => {
             transferred: stat.size,
             progress: 100,
             speedMbps: 0,
-            avgSpeedMbps: 0,
-            status: 'completed'
+            avgSpeedMbps: rxAvg,
+            status: 'completed',
+            rxMaxSpeedMbps: rxMax,
+            rxAvgSpeedMbps: rxAvg
           });
           resolve({ ok: true });
         } else {
@@ -1447,6 +1479,7 @@ ipcMain.handle('file:send', async (_event, payload) => {
     const startedAt = Date.now();
     let lastReportedAt = Date.now();
 
+     const limitBytesPerSec = 22 * 1024 * 1024; // 22 MB/s (PON simulated speed)
     const progressStream = new Transform({
       transform(chunk, encoding, callback) {
         uploadedBytes += chunk.length;
@@ -1480,7 +1513,19 @@ ipcMain.handle('file:send', async (_event, payload) => {
             status: 'sending'
           });
         }
-        callback(null, chunk);
+        
+        // Throttling stream writing speed to match receiver consumption rate
+        const elapsedMs = Date.now() - startedAt;
+        const expectedTimeMs = (uploadedBytes / limitBytesPerSec) * 1000;
+        const delayMs = expectedTimeMs - elapsedMs;
+
+        if (delayMs > 5) {
+          setTimeout(() => {
+            callback(null, chunk);
+          }, delayMs);
+        } else {
+          callback(null, chunk);
+        }
       }
     });
 

@@ -938,7 +938,7 @@ function renderChatMessages() {
 window.selectPeer = selectPeer;
 
 function renderTransmissions() {
-  const list = Array.from(state.activeTransfers.values());
+  const list = Array.from(state.activeTransfers.values()).reverse();
   const activeCount = list.filter(t => t.status === 'sending' || t.status === 'receiving').length;
 
   if (activeCount > 0) {
@@ -1138,6 +1138,13 @@ function formatDuration(ms) {
 // --- Speed Chart Helper & Actions ---
 
 function getTransferStats(item) {
+  if (item.rxMaxSpeedMbps && item.rxAvgSpeedMbps) {
+    return {
+      maxSpeedMbps: item.rxMaxSpeedMbps,
+      avgSpeedMbps: item.rxAvgSpeedMbps
+    };
+  }
+
   const history = item.speedHistory || [];
   if (history.length === 0) {
     const currentSpeed = item.speedMbps || 0;
