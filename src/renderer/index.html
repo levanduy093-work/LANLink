@@ -57,7 +57,7 @@
       <!-- Local Device Card -->
       <div class="local-device-card">
         <div class="device-card-header">
-          <span class="device-card-label">Thiết bị này (Người nhận)</span>
+          <span class="device-card-label">Thiết bị truyền</span>
           <span class="status-indicator online">
             <span class="pulse-dot"></span>Sẵn sàng
           </span>
@@ -124,7 +124,7 @@
       <!-- Discovered Devices Sidebar Section -->
       <div class="sidebar-section discovered-section">
         <div class="section-header">
-          <span>Thiết bị lân cận</span>
+          <span>Thiết bị nhận</span>
           <button id="rescanBtn" class="btn btn-secondary btn-icon-scan" type="button" title="Quét mạng">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
@@ -149,11 +149,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Footer Branding -->
-      <div class="sidebar-footer">
-        <span class="footer-text">Tương thích Giao thức LocalSend v2</span>
-      </div>
     </aside>
 
     <!-- CENTER CONSOLE: Video + Transmitter -->
@@ -161,7 +156,7 @@
 
       <!-- Speed Chart Section (top of center) -->
       <section class="speed-chart-section panel" id="speedChartSection"
-        style="display: flex; flex-direction: column; gap: 10px; flex: 6; min-height: 0;">
+        style="display: flex; flex-direction: column; gap: 10px; flex: 4.2; min-height: 0;">
         <div class="section-header">
           <h2 id="speedChartHeaderTitle">Đồ thị truyền dẫn</h2>
           <span id="speedChartHeaderSubtitle" class="badge">Đang rảnh</span>
@@ -178,7 +173,7 @@
             <p class="muted" id="speedChartDetailsText" style="margin: 0;">Sẵn sàng hiển thị đồ thị truyền tải</p>
           </div>
           <div id="chartCanvasContainer" class="video-container"
-            style="display: none; padding: 12px; box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6); position: relative;">
+            style="display: none; padding: 12px; position: relative;">
             <canvas id="speedChartCanvas" style="width: 100%; height: 100%;"></canvas>
           </div>
           <div class="call-controls" style="width: 100%; display: flex; gap: 8px;">

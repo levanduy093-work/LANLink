@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 const listeners = new Map();
 
@@ -12,6 +12,7 @@ function subscribe(channel, callback) {
 contextBridge.exposeInMainWorld('lanlink', {
   getInfo: () => ipcRenderer.invoke('app:get-info'),
   pickFile: () => ipcRenderer.invoke('dialog:pick-file'),
+  getPathForFile: (file) => webUtils.getPathForFile(file),
   sendMessage: (payload) => ipcRenderer.invoke('chat:send', payload),
   sendFile: (payload) => ipcRenderer.invoke('file:send', payload),
   sendSignal: (payload) => ipcRenderer.invoke('webrtc:signal', payload),

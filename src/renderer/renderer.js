@@ -202,133 +202,6 @@ async function boot() {
       console.error('Failed to load transfers from DB:', dbErr);
     }
 
-    // --- Mock Data Injection for Scrollbar Testing ---
-    
-    // 1. Mock Devices
-    const mockDevices = [
-      { id: 'dev1', alias: 'Thiết bị Đầu cuối ONU 1', ip: '192.168.1.10', port: 53317, deviceType: 'desktop', status: 'online', rtt: 12 },
-      { id: 'dev2', alias: 'Trạm phát ONU 2 (Hành lang)', ip: '192.168.1.15', port: 53317, deviceType: 'desktop', status: 'online', rtt: 45 },
-      { id: 'dev3', alias: 'Điện thoại Giám sát (Mobile)', ip: '192.168.1.20', port: 53317, deviceType: 'mobile', status: 'online', rtt: 110 },
-      { id: 'dev4', alias: 'Bộ ghép kênh WDM-3', ip: '192.168.1.35', port: 53317, deviceType: 'desktop', status: 'online', rtt: 250 },
-      { id: 'dev5', alias: 'Đầu đo công suất quang PM-2', ip: '192.168.1.42', port: 53317, deviceType: 'desktop', status: 'online', rtt: 8 },
-      { id: 'dev6', alias: 'ONU Thiết bị Học viên 5', ip: '192.168.1.55', port: 53317, deviceType: 'desktop', status: 'online', rtt: 35 },
-      { id: 'dev7', alias: 'Máy tính đo kiểm BER', ip: '192.168.1.60', port: 53317, deviceType: 'desktop', status: 'online', rtt: 18 },
-      { id: 'dev8', alias: 'ONU Phòng lab A', ip: '192.168.1.72', port: 53317, deviceType: 'desktop', status: 'online', rtt: 95 }
-    ];
-    state.devices = mockDevices;
-    state.selectedPeerId = 'dev1'; // Auto-select ONU 1 to highlight it and show chat
-    renderPeersGrid();
-
-    // 2. Mock Chat messages
-    const mockChat = [
-      { id: 'm1', sender: { id: 'dev1', alias: 'ONU 1' }, receiverId: 'me', text: 'Xin chào! ONU 1 đã sẵn sàng kết nối.', time: Date.now() - 600000 },
-      { id: 'm2', sender: { id: 'me', alias: 'dandi' }, receiverId: 'dev1', text: 'Chào ONU 1. Tôi đang bắt đầu kiểm tra đường truyền quang.', time: Date.now() - 550000 },
-      { id: 'm3', sender: { id: 'dev1', alias: 'ONU 1' }, receiverId: 'me', text: 'Ok, hãy gửi tệp cấu hình thử nghiệm xem suy hao là bao nhiêu nhé.', time: Date.now() - 500000 },
-      { id: 'm4', sender: { id: 'me', alias: 'dandi' }, receiverId: 'dev1', text: 'Tôi đang chuẩn bị gửi tệp tin 14MB.', time: Date.now() - 450000 },
-      { id: 'm5', sender: { id: 'dev1', alias: 'ONU 1' }, receiverId: 'me', text: 'Đã nhận được thông báo truyền tệp. Tốc độ hiện tại rất tốt.', time: Date.now() - 400000 },
-      { id: 'm6', sender: { id: 'me', alias: 'dandi' }, receiverId: 'dev1', text: 'Đúng vậy, công suất thu đạt -18dBm.', time: Date.now() - 350000 },
-      { id: 'm7', sender: { id: 'dev1', alias: 'ONU 1' }, receiverId: 'me', text: 'Công suất phát của tôi là +2dBm.', time: Date.now() - 300000 },
-      { id: 'm8', sender: { id: 'me', alias: 'dandi' }, receiverId: 'dev1', text: 'Tuyệt vời. Đường truyền hoàn toàn ổn định.', time: Date.now() - 250000 },
-      { id: 'm9', sender: { id: 'dev1', alias: 'ONU 1' }, receiverId: 'me', text: 'Có cần đo kiểm thêm suy hao của bộ chia splitter 1:8 không?', time: Date.now() - 200000 },
-      { id: 'm10', sender: { id: 'me', alias: 'dandi' }, receiverId: 'dev1', text: 'Có chứ, để tôi đo bằng máy thu công suất quang PM-2 rồi báo nhé.', time: Date.now() - 150000 },
-      { id: 'm11', sender: { id: 'dev1', alias: 'ONU 1' }, receiverId: 'me', text: 'Nhất trí. Tôi đang mở tab log để theo dõi tiến trình của bạn.', time: Date.now() - 100000 }
-    ];
-    for (const msg of mockChat) {
-      if (!state.chatHistory.some(m => m.id === msg.id)) {
-        state.chatHistory.push(msg);
-      }
-    }
-    renderChatMessages();
-
-    // 3. Mock Transmissions
-    const mockTransfers = [
-      {
-        transferId: 'tx1',
-        name: 'Bao_cao_thi_nghiem_quang_PON.pdf',
-        size: 15420100,
-        transferred: 7710050,
-        progress: 50,
-        status: 'sending',
-        speedMbps: 45.6,
-        durationMs: 4200,
-        speedHistory: [
-          { time: Date.now() - 4000, speed: 20 },
-          { time: Date.now() - 3000, speed: 35 },
-          { time: Date.now() - 2000, speed: 42 },
-          { time: Date.now() - 1000, speed: 45.6 }
-        ]
-      },
-      {
-        transferId: 'tx2',
-        name: 'Video_huong_dan_han_cap_quang.mp4',
-        size: 125400200,
-        transferred: 37620060,
-        progress: 30,
-        status: 'receiving',
-        speedMbps: 98.4,
-        durationMs: 12000,
-        speedHistory: [
-          { time: Date.now() - 3000, speed: 80 },
-          { time: Date.now() - 2000, speed: 95 },
-          { time: Date.now() - 1000, speed: 98.4 }
-        ]
-      },
-      {
-        transferId: 'tx3',
-        name: 'Chuong_trinh_do_kiem_BER.zip',
-        size: 4501200,
-        transferred: 4501200,
-        progress: 100,
-        status: 'completed',
-        speedMbps: 0,
-        durationMs: 1200,
-        speedHistory: [{ time: Date.now() - 1000, speed: 30 }]
-      },
-      {
-        transferId: 'tx4',
-        name: 'Huong_dan_su_dung_WDM.docx',
-        size: 2048500,
-        transferred: 1024250,
-        progress: 50,
-        status: 'paused',
-        speedMbps: 0,
-        durationMs: 8000,
-        speedHistory: []
-      },
-      {
-        transferId: 'tx5',
-        name: 'Du_lieu_do_kiem_OTDR_2026.csv',
-        size: 8520300,
-        transferred: 8520300,
-        progress: 100,
-        status: 'completed',
-        speedMbps: 0,
-        durationMs: 5000,
-        speedHistory: []
-      }
-    ];
-    for (const t of mockTransfers) {
-      if (!state.activeTransfers.has(t.transferId)) {
-        state.activeTransfers.set(t.transferId, t);
-      }
-    }
-    renderTransmissions();
-
-    // 4. Mock Optics System Logs
-    const mockLogs = [
-      { type: 'info', msg: 'Khởi động laser phát OLT ở bước sóng 1490nm (Đường xuống)...' },
-      { type: 'success', msg: 'Laser phát OLT hoạt động bình thường. Công suất nguồn: +2.5 dBm.' },
-      { type: 'info', msg: 'Đang bắt tay (Handshake) với các ONU qua lớp truyền dẫn TC...' },
-      { type: 'warning', msg: 'ONU 3 báo cáo suy hao vượt ngưỡng (> 18dBm). Vui lòng vệ sinh đầu nối sợi quang.' },
-      { type: 'info', msg: 'Đang kiểm tra mức tín hiệu thu tại ONU 1: -18.2 dBm (Đạt tiêu chuẩn).' },
-      { type: 'info', msg: 'Kênh thoại VoIP/Video WebRTC khởi tạo thành công.' },
-      { type: 'info', msg: 'Đang mở các socket dịch vụ truyền tệp LAN Link...' },
-      { type: 'success', msg: 'Đã mở cổng 53317 cho truyền tin và hội thoại video.' },
-      { type: 'info', msg: 'Hệ thống đo kiểm tốc độ (Ping) sẵn sàng hoạt động.' }
-    ];
-    for (const log of mockLogs) {
-      addLog(log.type, log.msg);
-    }
 
     // 7. Polling timer to keep interfaces and active IP in sync (every 5 seconds)
     setInterval(() => {
@@ -352,23 +225,7 @@ function updateLocalDeviceCard() {
 async function refreshInterfaces(force = false) {
   try {
     const me = await window.lanlink.getInfo(); // Sync active IP from backend
-    const rawInterfaces = await window.lanlink.getInterfaces();
-
-    // Inject mock interfaces for scrollbar testing
-    const mockInterfaces = [
-      { address: '192.168.1.8', name: 'en0 (Wi-Fi Cục bộ)', type: 'Wi-Fi' },
-      { address: '10.0.0.15', name: 'en1 (Cáp Ethernet)', type: 'LAN' },
-      { address: '172.16.2.3', name: 'en2 (Wi-Fi Dự phòng)', type: 'Wi-Fi' },
-      { address: '192.168.56.1', name: 'vboxnet0 (VirtualBox Host-Only)', type: 'LAN' },
-      { address: '192.168.99.1', name: 'vboxnet1 (Host-Only Virtual)', type: 'LAN' },
-      { address: '192.168.200.5', name: 'en4 (USB-C Ethernet Adapter)', type: 'LAN' }
-    ];
-    const interfaces = [...rawInterfaces];
-    for (const mock of mockInterfaces) {
-      if (!interfaces.some(i => i.address === mock.address)) {
-        interfaces.push(mock);
-      }
-    }
+    const interfaces = await window.lanlink.getInterfaces();
 
     // Check if anything has changed before updating DOM to prevent redraw flicker
     const listChanged = JSON.stringify(interfaces) !== JSON.stringify(state.interfaces);
@@ -465,8 +322,9 @@ function bindEvents() {
 
     const file = e.dataTransfer.files[0];
     if (file) {
+      const filePath = window.lanlink.getPathForFile(file);
       selectLocalFile({
-        path: file.path,
+        path: filePath,
         name: file.name,
         size: file.size
       });
@@ -640,26 +498,8 @@ function bindEvents() {
 
 // --- IPC Event Listeners from Main Process ---
 function registerIpcListeners() {
-  // Device list updates (discovered peers)
   window.lanlink.onDevices((devicesList) => {
-    // Inject mock devices for scrollbar testing
-    const mockDevices = [
-      { id: 'dev1', alias: 'Thiết bị Đầu cuối ONU 1', ip: '192.168.1.10', port: 53317, deviceType: 'desktop', status: 'online', rtt: 12 },
-      { id: 'dev2', alias: 'Trạm phát ONU 2 (Hành lang)', ip: '192.168.1.15', port: 53317, deviceType: 'desktop', status: 'online', rtt: 45 },
-      { id: 'dev3', alias: 'Điện thoại Giám sát (Mobile)', ip: '192.168.1.20', port: 53317, deviceType: 'mobile', status: 'online', rtt: 110 },
-      { id: 'dev4', alias: 'Bộ ghép kênh WDM-3', ip: '192.168.1.35', port: 53317, deviceType: 'desktop', status: 'online', rtt: 250 },
-      { id: 'dev5', alias: 'Đầu đo công suất quang PM-2', ip: '192.168.1.42', port: 53317, deviceType: 'desktop', status: 'online', rtt: 8 },
-      { id: 'dev6', alias: 'ONU Thiết bị Học viên 5', ip: '192.168.1.55', port: 53317, deviceType: 'desktop', status: 'online', rtt: 35 },
-      { id: 'dev7', alias: 'Máy tính đo kiểm BER', ip: '192.168.1.60', port: 53317, deviceType: 'desktop', status: 'online', rtt: 18 },
-      { id: 'dev8', alias: 'ONU Phòng lab A', ip: '192.168.1.72', port: 53317, deviceType: 'desktop', status: 'online', rtt: 95 }
-    ];
-    const combinedDevices = [...devicesList];
-    for (const mock of mockDevices) {
-      if (!combinedDevices.some(d => d.id === mock.id)) {
-        combinedDevices.push(mock);
-      }
-    }
-    state.devices = combinedDevices;
+    state.devices = devicesList;
     renderPeersGrid();
 
     // If our selected peer went offline, disable input
@@ -1997,8 +1837,8 @@ function handlePingDone(stats) {
 
 // --- Auto-scaling for Responsive Viewport ---
 function adjustWindowScale() {
-  const baseWidth = 1360; // Matches min-width of app-shell
-  const baseHeight = 900; // Base height to fit all layout sections comfortably
+  const baseWidth = 1280; // Matches min-width of app-shell
+  const baseHeight = 860; // Base height to fit all layout sections comfortably
   const winWidth = window.innerWidth;
   const winHeight = window.innerHeight;
   

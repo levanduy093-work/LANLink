@@ -1120,7 +1120,7 @@ p, .muted {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 6;
+  flex: 4.2;
   min-height: 0;
 }
 
@@ -1153,7 +1153,6 @@ p, .muted {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
 }
 
 .video-placeholder {
