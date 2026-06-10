@@ -617,7 +617,16 @@ function startHttpServer() {
             if (now - lastReportedAt >= 150) {
               const timeDiffSec = (now - lastReportedAt) / 1000 || 0.001;
               const bytesDiff = received - lastReportedBytes;
-              const speedMbps = (bytesDiff * 8) / timeDiffSec / 1000000;
+              const rawSpeedMbps = (bytesDiff * 8) / timeDiffSec / 1000000;
+
+              // Apply Exponential Moving Average (EMA) smoothing (alpha = 0.8)
+              let speedMbps = rawSpeedMbps;
+              if (transfer) {
+                if (transfer.lastSpeedMbps !== undefined) {
+                  speedMbps = (transfer.lastSpeedMbps * 0.8) + (rawSpeedMbps * 0.2);
+                }
+                transfer.lastSpeedMbps = speedMbps;
+              }
 
               if (speedMbps > maxSpeedMbps) {
                 maxSpeedMbps = speedMbps;
@@ -688,9 +697,6 @@ function startHttpServer() {
               activeIncomingSession = null;
               pendingIncomingSessions.delete(sessionId);
             }
-
-            res.writeHead(200);
-            res.end('OK');
           });
 
           req.on('error', (err) => {
@@ -1495,7 +1501,16 @@ ipcMain.handle('file:send', async (_event, payload) => {
         if (now - lastReportedAt >= 150) {
           const timeDiffSec = (now - lastReportedAt) / 1000 || 0.001;
           const bytesDiff = uploadedBytes - lastReportedBytes;
-          const speedMbps = (bytesDiff * 8) / timeDiffSec / 1000000;
+          const rawSpeedMbps = (bytesDiff * 8) / timeDiffSec / 1000000;
+
+          // Apply Exponential Moving Average (EMA) smoothing (alpha = 0.8)
+          let speedMbps = rawSpeedMbps;
+          if (transfer) {
+            if (transfer.lastSpeedMbps !== undefined) {
+              speedMbps = (transfer.lastSpeedMbps * 0.8) + (rawSpeedMbps * 0.2);
+            }
+            transfer.lastSpeedMbps = speedMbps;
+          }
 
           lastReportedAt = now;
           lastReportedBytes = uploadedBytes;

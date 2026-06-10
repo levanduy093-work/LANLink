@@ -185,6 +185,24 @@ graph TD
 
 ---
 
+## ⚡ Cơ chế Tối ưu hóa Đo kiểm & Hiển thị Tốc độ (Speed Measurements & UX Optimizations)
+
+Để mô phỏng chính xác và trực quan hiệu năng của đường truyền quang PON trong phòng thực hành, ứng dụng đã được tối ưu hóa sâu ở lớp xử lý dữ liệu và trải nghiệm người dùng:
+
+1. **Bộ lọc làm mượt tốc độ bằng thuật toán EMA (Exponential Moving Average):**
+   - **Thách thức:** Lưu lượng mạng truyền qua socket thường bị biến động giật cục (bursty) do cơ chế xả bộ đệm (flush) của hệ điều hành, làm cho tốc độ thời gian thực (real-time speed) và thời gian hoàn thành dự kiến (ETA) nhảy lên xuống liên tục.
+   - **Giải pháp:** Áp dụng thuật toán lọc EMA với hệ số $\alpha = 0.8$:
+     $$\text{Tốc độ hiển thị} = (\text{Tốc độ đo được trước đó} \times 0.8) + (\text{Tốc độ tức thời mới} \times 0.2)$$
+   - **Kết quả:** Đồ thị Chart.js và chỉ số thời gian hoàn thành (ETA) hiển thị mượt mà, phản ánh đúng xu hướng băng thông của đường truyền PON thực tế mà không bị nhiễu do xung đột bộ đệm.
+
+2. **Tự động chuyển đổi tiêu điểm đồ thị (Auto-focus Chart Session):**
+   - Khi một tiến trình gửi hoặc nhận tệp mới được bắt đầu, giao diện sẽ tự động chuyển tiêu điểm biểu đồ (`activeChartSessionId`) sang tệp mới đó và vẽ biểu đồ trực tuyến ngay lập tức. Người dùng không cần phải click thủ công vào thẻ tiến trình để theo dõi biểu đồ.
+
+3. **Đồng bộ hóa thống kê cuối cùng (Telemetry Synchronization):**
+   - Sau khi hoàn thành truyền tải, máy nhận (Receiver) tính toán tốc độ trung bình và tốc độ tối đa thực tế dựa trên tổng thời gian và dữ liệu đã nhận, sau đó trả ngược các tham số này về cho máy gửi (Sender) qua phản hồi HTTP. Điều này giúp thông số đo đạc quang học trên cả hai máy luôn khớp nhau 100% khi kết thúc.
+
+---
+
 ## 📥 Hướng dẫn Cài đặt & Triển khai
 
 ### Yêu cầu hệ thống:
