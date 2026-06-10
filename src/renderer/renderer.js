@@ -971,8 +971,14 @@ function renderTransmissions() {
       const cardEl = document.getElementById(`transfer-card-${item.transferId}`);
       if (!cardEl) continue;
 
-      const fillEl = cardEl.querySelector('.transfer-progress-fill');
+      const fillEl = cardEl.querySelector('.main-progress-fill');
       if (fillEl) fillEl.style.width = `${item.progress}%`;
+
+      const maxFillEl = cardEl.querySelector('.max-speed-fill');
+      if (maxFillEl) maxFillEl.style.width = `${item.progress}%`;
+
+      const avgFillEl = cardEl.querySelector('.avg-speed-fill');
+      if (avgFillEl) avgFillEl.style.width = `${item.progress}%`;
 
       const progressTextEl = cardEl.querySelector('.transfer-progress-text');
       if (progressTextEl) {
@@ -1060,15 +1066,33 @@ function renderTransmissions() {
           <span class="transfer-status-tag ${item.status}">${escapeHtml(statusMap[item.status] || item.status)}</span>
         </div>
         <div class="transfer-progress-track">
-          <div class="transfer-progress-fill" style="width: ${item.progress}%"></div>
+          <div class="transfer-progress-fill main-progress-fill" style="width: ${item.progress}%"></div>
         </div>
         <div class="transfer-card-footer">
           <span class="transfer-progress-text">${Math.round(item.progress)}% • ${formatProgressBytes(item.transferred, item.size)}</span>
           <span class="transfer-speed-text">${item.speedMbps ? (item.speedMbps / 8).toFixed(2) + ' MB/s' : '0.00 MB/s'}${etaText}</span>
         </div>
         <div class="transfer-card-stats">
-          <span class="transfer-max-speed">Tốc độ tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s</span>
-          <span class="transfer-avg-speed">Tốc độ trung bình: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s</span>
+          <div class="transfer-stat-group">
+            <span class="transfer-max-speed">Tốc độ tối đa: ${(stats.maxSpeedMbps / 8).toFixed(2)} MB/s</span>
+            <div class="transfer-progress-row">
+              <span class="progress-limit-label left">0</span>
+              <div class="transfer-progress-track">
+                <div class="transfer-progress-fill max-speed-fill" style="width: ${item.progress}%"></div>
+              </div>
+              <span class="progress-limit-label right">${formatBytes(item.size)}</span>
+            </div>
+          </div>
+          <div class="transfer-stat-group">
+            <span class="transfer-avg-speed">Tốc độ trung bình: ${(stats.avgSpeedMbps / 8).toFixed(2)} MB/s</span>
+            <div class="transfer-progress-row">
+              <span class="progress-limit-label left">0</span>
+              <div class="transfer-progress-track">
+                <div class="transfer-progress-fill avg-speed-fill" style="width: ${item.progress}%"></div>
+              </div>
+              <span class="progress-limit-label right">${formatBytes(item.size)}</span>
+            </div>
+          </div>
         </div>
       </div>
     `;

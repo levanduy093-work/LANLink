@@ -1303,10 +1303,58 @@ p, .muted {
 .transfer-card-stats {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 4px;
+  gap: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--divider-color-faint);
+  padding-top: 12px;
+}
+
+.transfer-stat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.transfer-max-speed, .transfer-avg-speed {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+.transfer-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.transfer-progress-row .transfer-progress-track {
+  flex: 1;
+  height: 4px;
+  margin-bottom: 0;
+  background: var(--progress-bg);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.transfer-progress-row .progress-limit-label {
+  font-size: 10px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  min-width: 10px;
+}
+
+.transfer-progress-row .progress-limit-label.right {
+  text-align: right;
+  min-width: 45px;
+}
+
+.max-speed-fill {
+  background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-violet) 100%) !important;
+}
+
+.avg-speed-fill {
+  background: linear-gradient(90deg, var(--status-amber) 0%, var(--status-green) 100%) !important;
 }
 
 /* Event Logs Tab specific styling */
