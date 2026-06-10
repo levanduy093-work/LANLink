@@ -594,7 +594,7 @@ function registerIpcListeners() {
 
     // Real-time speed chart update or auto-focus
     if (isActiveStatus(progress.status)) {
-      if (!state.activeChartSessionId || state.activeChartSessionId === progress.transferId) {
+      if (isNew || !state.activeChartSessionId || state.activeChartSessionId === progress.transferId) {
         if (state.activeChartSessionId !== progress.transferId) {
           window.openSpeedChartModal(progress.transferId);
         } else {
