@@ -29,10 +29,6 @@ npx electron-builder --mac --x64 --arm64
 echo "🪟 Đang build cho Windows (nsis installer, zip)..."
 npx electron-builder --win --x64
 
-# 6. Build cho Linux (x64 + arm64)
-echo "🐧 Đang build cho Linux (AppImage, zip)..."
-npx electron-builder --linux --x64 --arm64
-
 echo "============================================="
 echo "🎉 Quá trình build hoàn tất thành công!"
 echo "Các tệp đóng gói được lưu trong thư mục 'dist'."

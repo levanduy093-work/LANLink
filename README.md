@@ -12,7 +12,7 @@ Dự án sử dụng kiến trúc kết hợp giữa các thư viện hệ thố
 
 | Thành phần | Công nghệ / Thư viện | Vai trò trong hệ thống |
 | :--- | :--- | :--- |
-| **App Container** | Electron v42.3.2 | Đóng gói mã nguồn HTML/JS thành ứng dụng Desktop độc lập trên macOS, Windows và Linux. |
+| **App Container** | Electron v42.3.2 | Đóng gói mã nguồn HTML/JS thành ứng dụng Desktop độc lập trên macOS và Windows. |
 | **Backend** | Node.js | Xử lý các tác vụ mức thấp (quét cổng, bắt tay HTTP, đọc/ghi file phân đoạn, tương tác SQLite). |
 | **Frontend UI** | HTML5, CSS3, Vanilla JavaScript | Thiết kế giao diện Glassmorphism trực quan, hỗ trợ chuyển đổi Light/Dark Theme mượt mà thông qua CSS Variables. |
 | **Đồ thị** | Chart.js v4.4.9 | Biểu diễn telemetry tốc độ truyền dẫn dữ liệu thời gian thực dạng sóng (line chart). |
@@ -147,7 +147,7 @@ graph TD
     A(["Người dùng nhấn nút Ping"]) --> B["Lấy IP đích từ thiết bị đang chọn"]
     B --> C{Kiểm tra Hệ điều hành}
     C -- "Windows" --> D["Tạo lệnh: ping -n 4 <IP>"]
-    C -- "macOS / Linux" --> E["Tạo lệnh: ping -c 4 <IP>"]
+    C -- "macOS" --> E["Tạo lệnh: ping -c 4 <IP>"]
     D --> F["Thực thi lệnh shell qua Child Process"]
     E --> F
     F --> G["Nhận đầu ra dữ liệu văn bản từ lệnh ping"]
