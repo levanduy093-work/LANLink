@@ -977,13 +977,21 @@ function renderTransmissions() {
       const stats = getTransferStats(item);
       const maxSpeedMB = stats.maxSpeedMbps / 8;
       const avgSpeedMB = stats.avgSpeedMbps / 8;
-      const limitMB = 1024; // 1 GB/s
+      const limitMB = (item.size && item.size > 0) ? (item.size / (1024 * 1024)) : 1024;
 
       const maxFillEl = cardEl.querySelector('.max-speed-fill');
       if (maxFillEl) maxFillEl.style.width = `${Math.min(100, (maxSpeedMB / limitMB) * 100)}%`;
 
       const avgFillEl = cardEl.querySelector('.avg-speed-fill');
       if (avgFillEl) avgFillEl.style.width = `${Math.min(100, (avgSpeedMB / limitMB) * 100)}%`;
+
+      const limitText = (item.size && item.size > 0) ? (formatBytes(item.size) + '/s') : '1 GB/s';
+      const limitLabels = cardEl.querySelectorAll('.progress-limit-label.right');
+      limitLabels.forEach(lbl => {
+        if (lbl.textContent !== limitText) {
+          lbl.textContent = limitText;
+        }
+      });
 
       const progressTextEl = cardEl.querySelector('.transfer-progress-text');
       if (progressTextEl) {
@@ -1060,6 +1068,8 @@ function renderTransmissions() {
     };
 
     const stats = getTransferStats(item);
+    const limitMB = (item.size && item.size > 0) ? (item.size / (1024 * 1024)) : 1024;
+    const limitText = (item.size && item.size > 0) ? (formatBytes(item.size) + '/s') : '1 GB/s';
 
     return `
       <div class="transfer-card" id="transfer-card-${item.transferId}" onclick="openSpeedChartModal('${item.transferId}')" style="cursor: pointer;">
@@ -1081,9 +1091,9 @@ function renderTransmissions() {
             <div class="transfer-progress-row">
               <span class="progress-limit-label left">0</span>
               <div class="transfer-progress-track">
-                <div class="transfer-progress-fill max-speed-fill" style="width: ${Math.min(100, ((stats.maxSpeedMbps / 8) / 1024) * 100)}%"></div>
+                <div class="transfer-progress-fill max-speed-fill" style="width: ${Math.min(100, ((stats.maxSpeedMbps / 8) / limitMB) * 100)}%"></div>
               </div>
-              <span class="progress-limit-label right">1 GB/s</span>
+              <span class="progress-limit-label right">${limitText}</span>
             </div>
           </div>
           <div class="transfer-stat-group">
@@ -1091,9 +1101,9 @@ function renderTransmissions() {
             <div class="transfer-progress-row">
               <span class="progress-limit-label left">0</span>
               <div class="transfer-progress-track">
-                <div class="transfer-progress-fill avg-speed-fill" style="width: ${Math.min(100, ((stats.avgSpeedMbps / 8) / 1024) * 100)}%"></div>
+                <div class="transfer-progress-fill avg-speed-fill" style="width: ${Math.min(100, ((stats.avgSpeedMbps / 8) / limitMB) * 100)}%"></div>
               </div>
-              <span class="progress-limit-label right">1 GB/s</span>
+              <span class="progress-limit-label right">${limitText}</span>
             </div>
           </div>
         </div>

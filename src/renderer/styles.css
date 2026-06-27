@@ -1882,6 +1882,15 @@ p, .muted {
   text-align: center;
 }
 
+.department-title {
+  font-size: 38px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-cyan);
+  margin-bottom: 8px;
+}
+
 .project-info {
   display: flex;
   align-items: center;
